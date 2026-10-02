@@ -1,0 +1,28 @@
+  d.innerHTML = '<b>' + (ok ? '✔ ' : '✘ ') + title + '</b><br>';
+  d.appendChild(document.createTextNode(text || ''));
+  out.appendChild(d);
+}
+
+// 1. Is the bridge loaded and the URL filled in?
+let url = '';
+try { url = APPS_SCRIPT_URL; } catch (e) {}
+if (!url) show(false, '1. Bridge file', 'apps-script-bridge.js did not load. It must be in the same folder as this page.');
+else if (url.indexOf('PASTE_') === 0) show(false, '1. Bridge URL', 'You have not pasted your /exec URL into apps-script-bridge.js yet.');
+else if (!/\/exec$/.test(url)) show(false, '1. Bridge URL', 'URL must end in /exec. Yours: ' + url);
+else show(true, '1. Bridge URL looks right', url);
+
+// 2. Does the server answer a POST like the shop does?
+if (url && /\/exec$/.test(url)) {
+  fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: 'getState', args: [] }) })
+    .then(r => r.text().then(t => ({ status: r.status, t })))
+    .then(x => {
+      let j = null; try { j = JSON.parse(x.t); } catch (e) {}
+      if (j && j.result) show(true, '2. Server replied correctly (getState)', 'users: ' + Object.keys(j.result.users || {}).length);
+      else if (j && j.error) show(false, '2. Server error', j.error);
+      else show(false, '2. Server did not send the expected reply', 'HTTP ' + x.status + ' – ' + x.t.slice(0, 250));
+    })
+    .catch(e => show(false, '2. Could not reach server', e.message + ' (usually: access is not set to "Anyone", or wrong URL)'));
+}
+</script>
+</body>
+</html>
