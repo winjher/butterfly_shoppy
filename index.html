@@ -57,20 +57,7 @@
   .slot.sel{background:var(--g);color:#fff}
   .slot:disabled{border-color:#999;color:#999;background:none!important;text-decoration:line-through}
   .ok{color:var(--g);font-weight:700}
-  .hide{display:none!important}
-  #login,#popup{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
-  #login{background:var(--bg)}
-  #popup{background:#000a;z-index:40}
-  .box{background:var(--card);border-radius:14px;padding:20px;max-width:420px;width:100%;max-height:90vh;overflow:auto}
-  .box label{display:block;margin:8px 0;font-size:.85rem}
-  .box input,.box select{width:100%}
-  .atabs{display:flex;gap:8px;margin-bottom:12px}
-  .atabs button{flex:1;padding:10px;border:2px solid var(--g);background:none;color:var(--fg);border-radius:8px;font-weight:700;cursor:pointer}
-  .atabs button.on{background:var(--g);color:#fff}
-  .lot{border-left:5px solid var(--g)}
-  .lot.old{border-color:#999;opacity:.6}
-  .pay{border:2px solid #0070e0}
-  .pay h3{color:#0070e0}
+  .hide{display:none!important}#login,#popup{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}#login{background:var(--bg)}#popup{background:#000a;z-index:40}.box{background:var(--card);border-radius:14px;padding:20px;max-width:420px;width:100%;max-height:90vh;overflow:auto}.box label{display:block;margin:8px 0;font-size:.85rem}.box input,.box select{width:100%}.atabs{display:flex;gap:8px;margin-bottom:12px}.atabs button{flex:1;padding:10px;border:2px solid var(--g);background:none;color:var(--fg);border-radius:8px;font-weight:700;cursor:pointer}.atabs button.on{background:var(--g);color:#fff}.lot{border-left:5px solid var(--g)}.lot.old{border-color:#999;opacity:.6}.pay{border:2px solid #0070e0}.pay h3{color:#0070e0}
 </style>
 </head>
 <body>
@@ -87,7 +74,6 @@
 </header>
 
 <div id="login"><div class="box"><h2 style="margin-top:0">🦋 Butterfly Pupae Shop</h2>
- <p style="font-size:.85rem;color:#666">Demo mode: Local storage only. This is a prototype interface for managing butterfly pupae sales and farm bookings.</p>
  <div class="atabs"><button id="tabLi" class="on" onclick="showAuth('login')">Log in</button><button id="tabRg" onclick="showAuth('register')">Register</button></div>
 
  <div id="formLogin">
@@ -183,7 +169,6 @@
 </aside>
 
 <script>
-// ===== SPECIES & STATE =====
 const speciesList = {
   'Butterfly-Batwing':['#7b2d26','#e8b04a'],'Butterfly-Clippers':['#8a6d3b','#f2e3b3'],
   'Butterfly-Common Jay':['#2b2b2b','#6fd3c6'],'Butterfly-Common Lime':['#7a6a3a','#e7d85a'],
@@ -201,63 +186,26 @@ let park = {gName:'',gNo:'',closed:[],farms:{}};
 let reservations = [];
 let selSlot = '';
 let lots=[],orders=[],users={},me=null,polling=false;
-
 Object.keys(speciesList).forEach(s=>{
   state[s] = {price:50, flooded:false, butterflyImg:'', pupaImg:''};
   pupaeSalesData[s] = [];
 });
-
-// ===== APPSCRIPT API =====
-const APP_URL = 'https://script.google.com/macros/s/AKfycbzJ-Ga6Jo8XxMiK4FCTPwgY4r6C4C62rWdA53Uc23oufDZb7DH0b6ddLpNQjBrNu9UV/exec';
-let pending = 0;
-
-async function apiCall(action, data) {
-  try {
-    const response = await fetch(APP_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action, ...data })
-    });
-    const result = await response.json();
-    return result;
-  } catch (error) {
-    console.error('API Error:', error);
-    return { ok: false, msg: 'Server error: ' + error.message };
-  }
+function applyState(saved){
+  if(!saved) return;
+  Object.keys(state).forEach(s=>{ if(saved.state&&saved.state[s]) Object.assign(state[s],saved.state[s]); });
+  if(saved.sales) Object.keys(pupaeSalesData).forEach(s=>{ if(saved.sales[s]) pupaeSalesData[s]=saved.sales[s]; });
+  if(saved.park) Object.assign(park,saved.park);
+  reservations=saved.reservations||[]; lots=saved.lots||[]; orders=saved.orders||[]; users=saved.users||{};
 }
-
-async function loadState(){
-  pending++;
-  const result = await apiCall('getState', {});
-  if(result && result.state) {
-    Object.keys(state).forEach(s=>{ if(result.state[s]) Object.assign(state[s],result.state[s]); });
-    Object.keys(pupaeSalesData).forEach(s=>{ if(result.sales && result.sales[s]) pupaeSalesData[s]=result.sales[s]; });
-    if(result.park) Object.assign(park,result.park);
-    reservations=result.reservations||[]; lots=result.lots||[]; orders=result.orders||[]; users=result.users||{};
-  }
-  pending--;
+let saveT=0;
+function save(){
+  clearTimeout(saveT);
+  saveT=setTimeout(()=>{ saveT=0; pending++;
+    google.script.run.withSuccessHandler(()=>pending--).withFailureHandler(()=>pending--)
+      .saveState({state,sales:pupaeSalesData,park,reservations,lots,orders,users}); },300);
 }
+function log(action,detail){ google.script.run.logActivity(me||'-',(users[me]&&users[me].role)||'-',action,String(detail||'')); }
 
-async function saveState(){
-  if(pending) return; // Don't save while other operations pending
-  pending++;
-  await apiCall('saveState', {
-    state, sales: pupaeSalesData, park, reservations, lots, orders, users
-  });
-  pending--;
-}
-
-async function logAction(action, detail) {
-  if(!me) return;
-  await apiCall('logActivity', {
-    user: me,
-    role: role() || '-',
-    action,
-    detail: String(detail || '')
-  });
-}
-
-// ===== SVG GENERATORS =====
 function butterflySVG(c){
   return `<svg viewBox="0 0 100 80" width="100" height="80">
   <ellipse cx="30" cy="28" rx="26" ry="22" fill="${c[1]}" stroke="${c[0]}" stroke-width="4" transform="rotate(-20 30 28)"/>
@@ -275,34 +223,20 @@ function pupaSVG(c){
   <line x1="30" y1="4" x2="30" y2="0" stroke="#5a4a2a" stroke-width="3"/></svg>`;
 }
 
-// ===== DOM HELPERS =====
-const $=id=>document.getElementById(id);
-const today=()=>new Date().toISOString().slice(0,10);
-const live=r=>['Pending Payment','Payment Submitted','Confirmed'].includes(r.status);
-const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const liveLot=l=>l.left>0&&Date.now()<l.exp;
-const role=()=>users[me]&&users[me].role;
-const fp=n=>(park.farms[n]&&park.farms[n].p!=null)?park.farms[n].p:FARMS[n].p;
-const fc=n=>(park.farms[n]&&park.farms[n].c!=null)?park.farms[n].c:FARMS[n].c;
-const farm=()=>$('rFarm').value;
-const nVis=()=>Math.max(0,parseInt($('rN').value,10)||0);
-const booked=(f,d,s)=>reservations.filter(r=>live(r)&&r.farm===f&&r.date===d&&r.slot===s).reduce((a,r)=>a+r.n,0);
-function timeLeft(l){const h=Math.floor((l.exp-Date.now())/36e5); return h<0?'Expired':Math.floor(h/24)+'d '+(h%24)+'h left';}
-
-// ===== VIEWS =====
+// ---- Views ----
 function showView(v){
   ['shop','park','pupae'].forEach(x=>{
     const N=x[0].toUpperCase()+x.slice(1);
-    $(('view'+N)).classList.toggle('hide',v!==x);
-    $('tab'+N).classList.toggle('on',v===x);
+    document.getElementById('view'+N).classList.toggle('hide',v!==x);
+    document.getElementById('tab'+N).classList.toggle('on',v===x);
   });
   if(v==='park') initPark();
   if(v==='pupae') initPupae();
 }
 
-// ===== SHOP =====
+// ---- Shop ----
 function render(){
-  const grid = $('grid'); grid.innerHTML = '';
+  const grid = document.getElementById('grid'); grid.innerHTML = '';
   Object.keys(speciesList).forEach((s,i)=>{
     const d = state[s], c = speciesList[s];
     const card = document.createElement('div');
@@ -328,23 +262,23 @@ function render(){
   });
   renderCart();
 }
-function setPrice(s,v){ state[s].price = Math.max(0,parseFloat(v)||0); logAction('Set shop price',s+' P'+state[s].price); saveState(); render(); }
-function setFlooded(s,f){ state[s].flooded = f; if(f && cart[s]) delete cart[s]; logAction('Flooded flag',s+' = '+f); saveState(); render(); }
+function setPrice(s,v){ state[s].price = Math.max(0,parseFloat(v)||0); save(); log('Set shop price',s+' P'+state[s].price); render(); }
+function setFlooded(s,f){ state[s].flooded = f; if(f && cart[s]) delete cart[s]; save(); log('Flooded flag',s+' = '+f); render(); }
 function setImg(s,key,input){
   const file = input.files[0]; if(!file) return;
   const r = new FileReader();
-  r.onload = ()=>{ state[s][key]=r.result; saveState(); render(); };
+  r.onload = ()=>{ state[s][key]=r.result; save(); render(); };
   r.readAsDataURL(file);
 }
 function addToCart(s,i){
   if(state[s].flooded) return;
-  const q = Math.max(1,parseInt($('qty'+i).value,10)||1);
+  const q = Math.max(1,parseInt(document.getElementById('qty'+i).value,10)||1);
   cart[s] = (cart[s]||0)+q; renderCart(); toggleCart(true);
 }
 function removeFromCart(s){ delete cart[s]; renderCart(); }
 function renderCart(){
   Object.keys(cart).forEach(s=>{ if(state[s].flooded) delete cart[s]; });
-  const box = $('cartItems'); box.innerHTML='';
+  const box = document.getElementById('cartItems'); box.innerHTML='';
   let total=0, count=0;
   Object.keys(cart).forEach(s=>{
     const line = cart[s]*state[s].price; total+=line; count+=cart[s];
@@ -354,12 +288,12 @@ function renderCart(){
     box.appendChild(el);
   });
   if(!count) box.innerHTML='<p>Your cart is empty.</p>';
-  $('cartTotal').textContent = total.toFixed(2);
-  $('cartCount').textContent = count;
-  $('checkout').disabled = !count;
+  document.getElementById('cartTotal').textContent = total.toFixed(2);
+  document.getElementById('cartCount').textContent = count;
+  document.getElementById('checkout').disabled = !count;
 }
 function toggleCart(open){
-  $('cart').classList.toggle('open', typeof open==='boolean'?open:undefined);
+  document.getElementById('cart').classList.toggle('open', typeof open==='boolean'?open:undefined);
 }
 function checkout(){
   const date = new Date().toISOString().slice(0,10);
@@ -367,12 +301,11 @@ function checkout(){
     if(state[s].flooded) return;
     pupaeSalesData[s].push({date, qty:cart[s], price:state[s].price});
   });
-  logAction('Shop checkout',JSON.stringify(cart)); 
-  cart = {}; saveState(); renderCart(); updateSalesTable(); renderChart();
+  log('Shop checkout',JSON.stringify(cart)); cart = {}; save(); renderCart(); updateSalesTable(); renderChart();
   alert('Thank you! Your order has been placed.'); toggleCart(false);
 }
 function updateSalesTable(){
-  const tbody = $('salesTable').getElementsByTagName('tbody')[0];
+  const tbody = document.getElementById('salesTable').getElementsByTagName('tbody')[0];
   tbody.innerHTML='';
   for(const s in pupaeSalesData) for(const sale of pupaeSalesData[s]){
     const row = tbody.insertRow();
@@ -385,19 +318,19 @@ function renderChart(){
   const labels = Object.keys(pupaeSalesData).filter(s=>pupaeSalesData[s].length);
   const data = labels.map(s=>pupaeSalesData[s].reduce((a,x)=>a+x.qty,0));
   if(chart) chart.destroy();
-  chart = new Chart($('pupaeSalesChart'),{type:'bar',
+  chart = new Chart(document.getElementById('pupaeSalesChart'),{type:'bar',
     data:{labels:labels.map(l=>l.replace('Butterfly-','')),datasets:[{label:'Pupae sold',data,backgroundColor:'#2f6b3f'}]},
     options:{scales:{y:{beginAtZero:true,ticks:{precision:0}}}}});
 }
 function toggleAdmin(){
   const on = document.body.classList.toggle('admin-on');
-  $('adminHint').style.display = on?'block':'none';
-  $('adminBtn').textContent = on?'Exit Manage':'Manage';
+  document.getElementById('adminHint').style.display = on?'block':'none';
+  document.getElementById('adminBtn').textContent = on?'Exit Manage':'Manage';
   if(on){ updateSalesTable(); renderChart(); initPark(); }
   renderRes();
 }
 
-// ===== FARM RESERVATION =====
+// ---- Farm reservation + GCash ----
 const std=['Tropical butterflies','Educational tours','Photography sessions'];
 const FARMS={
  'JCM Butterfly Breeding Farm':{loc:'Cawit, Boac, Marinduque',ll:[16.4023,120.5960],p:150,c:20,h:'8:00 AM - 5:00 PM',tel:'+63 937 193 2565',sp:std},
@@ -410,7 +343,14 @@ const FARMS={
  'Monarch Breeding Center':{loc:'Los Baños, Laguna',ll:[14.1693,121.2376],p:200,c:12,h:'10:00 AM - 3:00 PM (By appointment)',tel:'+63 919 345 6789',sp:['Research tours','Breeding techniques','Student programs']}
 };
 const SLOTS=['09:00 AM - 11:00 AM','11:00 AM - 01:00 PM','01:00 PM - 03:00 PM','03:00 PM - 05:00 PM'];
-const TWO_DAYS=2*864e5;
+const $=id=>document.getElementById(id);
+const today=()=>new Date().toISOString().slice(0,10);
+const live=r=>['Pending Payment','Payment Submitted','Confirmed'].includes(r.status);
+const fp=n=>(park.farms[n]&&park.farms[n].p!=null)?park.farms[n].p:FARMS[n].p;
+const fc=n=>(park.farms[n]&&park.farms[n].c!=null)?park.farms[n].c:FARMS[n].c;
+const farm=()=>$('rFarm').value;
+const nVis=()=>Math.max(0,parseInt($('rN').value,10)||0);
+const booked=(f,d,s)=>reservations.filter(r=>live(r)&&r.farm===f&&r.date===d&&r.slot===s).reduce((a,r)=>a+r.n,0);
 
 function initPark(){
   if(!$('rFarm').options.length) Object.keys(FARMS).forEach(f=>$('rFarm').add(new Option(f,f)));
@@ -428,14 +368,13 @@ function farmChanged(){
 function setPark(){
   park.gName=$('setGName').value.trim(); park.gNo=$('setGNo').value.trim();
   const f=farm(); park.farms[f]={p:Math.max(0,parseFloat($('setPrice').value)||0),c:Math.max(1,parseInt($('setCap').value,10)||1)};
-  logAction('Park settings updated',f);
-  saveState(); farmChanged();
+  save(); farmChanged();
 }
 function addClosed(){
   const v=$('closeDate').value; if(!v||park.closed.includes(v)) return;
-  park.closed.push(v); park.closed.sort(); logAction('Park closed date',v); saveState(); renderClosed(); renderSlots();
+  park.closed.push(v); park.closed.sort(); save(); renderClosed(); renderSlots();
 }
-function openDate(v){ park.closed=park.closed.filter(x=>x!==v); logAction('Park reopened date',v); saveState(); renderClosed(); renderSlots(); }
+function openDate(v){ park.closed=park.closed.filter(x=>x!==v); save(); renderClosed(); renderSlots(); }
 function renderClosed(){
   $('closedList').innerHTML=park.closed.length?'Closed: '+park.closed.map(d=>`${d} <a href="#" onclick="openDate('${d}');return false">[reopen]</a>`).join(', '):'No closed dates.';
 }
@@ -465,8 +404,7 @@ function reserve(){
   const ref='BK'+Date.now().toString(36).toUpperCase().slice(-6);
   reservations.push({ref,user:me,farm:f,name,phone,email:$('rEmail').value.trim(),purpose:$('rPurpose').value,date,slot:selSlot,n,
     notes:$('rNotes').value.trim(),total:n*fp(f),status:'Pending Payment',payRef:''});
-  logAction('Park reservation',ref+' | '+f+' | '+date+' | '+selSlot+' | '+n+' pax | P'+(n*fp(f)));
-  saveState(); selSlot=''; $('rMsg').textContent=''; $('rName').value=''; $('rNotes').value=''; $('rTerms').checked=false;
+  save(); log('Park reservation',ref+' | '+f+' | '+date+' | '+selSlot+' | '+n+' pax | P'+(n*fp(f))); selSlot=''; $('rMsg').textContent=''; $('rName').value=''; $('rNotes').value=''; $('rTerms').checked=false;
   $('findPhone').value=phone; renderSlots(); renderRes(); showPay(ref);
 }
 function showPay(ref){
@@ -485,15 +423,15 @@ function submitPay(ref){
   const r=reservations.find(x=>x.ref===ref), v=$('payRef').value.replace(/\s/g,'');
   if(!/^\d{10,13}$/.test(v)){ $('payMsg').textContent='Enter the 10–13 digit GCash reference number.'; return; }
   if(reservations.some(x=>x.ref!==ref&&x.payRef===v)){ $('payMsg').textContent='That reference number was already used.'; return; }
-  r.payRef=v; r.status='Payment Submitted'; logAction('Park GCash payment submitted',ref+' GCash '+v); saveState(); renderRes();
+  r.payRef=v; r.status='Payment Submitted'; save(); log('Park GCash payment submitted',ref+' GCash '+v); renderRes();
   $('payBox').innerHTML=`<h3 style="margin-top:0" class="ok">Payment submitted ✔</h3><p>Booking ${r.ref} will be confirmed once the farm verifies your GCash payment (ref ${v}).</p>`;
 }
 function setStatus(ref,st){
   const r=reservations.find(x=>x.ref===ref);
-  if(r&&(st!=='Cancelled'||confirm('Cancel '+ref+'?'))){ r.status=st; logAction('Park reservation '+st,ref); saveState(); renderSlots(); renderRes(); }
+  if(r&&(st!=='Cancelled'||confirm('Cancel '+ref+'?'))){ r.status=st; save(); log('Park reservation '+st,ref); renderSlots(); renderRes(); }
 }
 function renderRes(){
-  const tb=$('resTable').getElementsByTagName('tbody')[0], admin=document.body.classList.contains('admin-on');
+  const tb=$('resTable').getElementsByTagName('tbody')[0], admin=document.body.classList.contains('admin-on'), ph=$('findPhone').value.trim();
   const list=reservations.filter(r=>r.farm&&(admin||r.user===me)).sort((a,b)=>(a.date+a.slot).localeCompare(b.date+b.slot));
   tb.innerHTML='';
   list.forEach(r=>{
@@ -507,7 +445,73 @@ function renderRes(){
   $('resHint').style.display=list.length?'none':'block';
 }
 
-// ===== FRESH PUPAE LISTINGS =====
+// ---- Accounts, fresh pupae listings, QA, GCash orders ----
+const TWO_DAYS=2*864e5;
+const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const liveLot=l=>l.left>0&&Date.now()<l.exp;
+const role=()=>users[me]&&users[me].role;
+function timeLeft(l){const h=Math.floor((l.exp-Date.now())/36e5); return h<0?'Expired':Math.floor(h/24)+'d '+(h%24)+'h left';}
+function reload(cb){
+  google.script.run.withSuccessHandler(st=>{ if(st){lots=st.lots||[];orders=st.orders||[];users=st.users||{};reservations=st.reservations||[];} if(cb)cb(); })
+    .withFailureHandler(()=>{ if(cb)cb(); }).getState();
+}
+function showAuth(mode){
+  $('formLogin').classList.toggle('hide',mode!=='login'); $('formReg').classList.toggle('hide',mode!=='register');
+  $('tabLi').classList.toggle('on',mode==='login'); $('tabRg').classList.toggle('on',mode==='register');
+  $('lMsg').textContent=''; $('lMsg2').textContent='';
+}
+function authCall(m,mode,r,u,pw,x){
+  x.mode=mode; m.textContent=mode==='login'?'Signing in…':'Creating account…';
+  google.script.run.withSuccessHandler(res=>{
+    if(!res.ok){m.textContent=res.msg;return;}
+    m.textContent=''; try{sessionStorage.setItem('bpUser',u);}catch(e){}
+    reload(()=>{ if(!users[u]) users[u]=res.user; enter(u); });
+  }).withFailureHandler(e=>{m.textContent='Server error: '+e.message;}).login(r,u,pw,x);
+}
+function doLogin(){
+  const u=$('liUser').value.trim().toLowerCase(), pw=$('liPass').value, m=$('lMsg');
+  if(!u||!pw){m.textContent='Enter your username and password.';return;}
+  authCall(m,'login','',u,pw,{});
+}
+function doRegister(){
+  const r=$('lRole').value, u=$('rgUser').value.trim().toLowerCase(), pw=$('rgPass').value, m=$('lMsg2');
+  const x={name:$('lName').value.trim(),phone:$('lPhone').value.trim(),email:$('lEmail').value.trim(),org:$('lOrg').value.trim(),addr:$('lAddr').value.trim()};
+  if(!x.name||x.phone.length<7){m.textContent='Enter your full name and phone number.';return;}
+  if(r!=='enthusiast'&&(!x.org||!x.addr)){m.textContent='Enter your '+(r==='breeder'?'farm / business name':'company / buyer name')+' and address.';return;}
+  if(u.length<3){m.textContent='Username must be at least 3 characters.';return;}
+  if(pw.length<4){m.textContent='Password must be at least 4 characters.';return;}
+  if(pw!==$('rgPass2').value){m.textContent='Passwords do not match.';return;}
+  authCall(m,'register',r,u,pw,x);
+}
+function enter(u){
+  me=u; $('login').classList.add('hide'); ['liPass','rgPass','rgPass2'].forEach(i=>$(i).value='');
+  $('who').textContent=u+' ('+role()+')';
+  const br=role()==='breeder'; $('adminBtn').classList.toggle('hide',!br); $('tabPupae').classList.toggle('hide',role()==='enthusiast');
+  if(!br&&document.body.classList.contains('admin-on')) toggleAdmin();
+  showView('shop'); checkPopup();
+  if(!polling){polling=true; setInterval(poll,5000); window.addEventListener('storage',poll);}
+}
+function logout(){try{sessionStorage.removeItem('bpUser');}catch(e){} const f=()=>location.reload(); google.script.run.withSuccessHandler(f).withFailureHandler(f).logActivity(me||'-',role()||'-','Logout','');}
+let lastSig='', pending=0;
+function poll(){
+  if(!me||pending||saveT) return;
+  reload(()=>{
+    if(!users[me]) return;
+    const sig=lots.map(l=>l.id+':'+l.left+':'+liveLot(l)).join();
+    if(sig!==lastSig){lastSig=sig; if($('lotList')) renderLots();}
+    checkPopup();
+  });
+}
+function checkPopup(){
+  if(role()!=='purchaser'||!$('popup').classList.contains('hide')) return;
+  const fresh=lots.filter(l=>liveLot(l)&&l.created>users[me].seen);
+  if(!fresh.length) return;
+  $('popList').innerHTML=fresh.map(l=>`<p><b>${esc(l.sp.replace('Butterfly-',''))}</b> – ${l.left} pupae · ₱${l.price.toFixed(2)} each<br><small>from ${esc(l.breeder)} · QA passed · ${timeLeft(l)}</small></p>`).join('');
+  $('popup').classList.remove('hide');
+}
+function closePopup(go){
+  $('popup').classList.add('hide'); users[me].seen=Date.now(); save(); if(go) showView('pupae');
+}
 function initPupae(){
   const u=users[me]; if(!u) return;
   const opts=Object.keys(speciesList).map(s=>`<option value="${s}">${s.replace('Butterfly-','')}</option>`).join('');
@@ -543,15 +547,14 @@ function postLot(){
   if([...document.querySelectorAll('.qa')].some(c=>!c.checked)) return m('Complete every quality assurance check first.');
   u.gcash=g; const now=Date.now();
   lots.push({id:'L'+now.toString(36),breeder:me,sp:$('bSp').value,qty,left:qty,price,notes:$('bNotes').value.trim(),created:now,exp:now+TWO_DAYS});
-  logAction('Post fresh pupae',lots[lots.length-1].sp+' x'+qty+' @P'+price);
-  saveState(); m(''); $('bQty').value=''; document.querySelectorAll('.qa').forEach(c=>c.checked=false); $('bNotes').value=''; renderLots();
+  save(); log('Post fresh pupae',lots[lots.length-1].sp+' x'+qty+' @P'+price); m(''); $('bQty').value=''; document.querySelectorAll('.qa').forEach(c=>c.checked=false); $('bNotes').value=''; renderLots();
   $('bMsg').textContent='Posted! Purchasers will be notified. Listing expires in 2 days.'; $('bMsg').className='ok';
 }
 function editLeft(id){
   const l=lots.find(x=>x.id===id), n=parseInt(prompt('Exact number of pupae still available:',l.left),10);
-  if(n>=0){ l.qty=(l.qty-l.left)+n; l.left=n; logAction('Set pupae count',l.id+' '+l.sp+' now '+n); saveState(); renderLots(); }
+  if(n>=0){ l.qty=(l.qty-l.left)+n; l.left=n; save(); log('Set pupae count',l.id+' '+l.sp+' now '+n); renderLots(); }
 }
-function withdraw(id){ const l=lots.find(x=>x.id===id); if(l&&confirm('Withdraw the remaining pupae from sale?')){l.left=0; logAction('Withdraw listing',l.id); saveState(); renderLots();} }
+function withdraw(id){ const l=lots.find(x=>x.id===id); if(l&&confirm('Withdraw the remaining pupae from sale?')){l.left=0; save(); log('Withdraw listing',l.id); renderLots();} }
 function renderLots(){
   const box=$('lotList'); if(!box||!users[me]) return;
   if(role()==='breeder'){
@@ -573,23 +576,22 @@ function orderLot(id){
   if(!l||!liveLot(l)) return alert('This listing has expired or sold out.');
   if(!(q>=1)||q>l.left) return alert('Only '+l.left+' available.');
   orders.push({id:'OR'+Date.now().toString(36).toUpperCase().slice(-6),lot:id,buyer:me,breeder:l.breeder,sp:l.sp,qty:q,price:l.price,total:q*l.price,status:'Awaiting Payment',payRef:'',created:Date.now()});
-  l.left-=q; logAction('Order pupae',l.sp+' x'+q+' from '+l.breeder); saveState(); renderLots(); renderOrders();
+  l.left-=q; save(); log('Order pupae',l.sp+' x'+q+' from '+l.breeder); renderLots(); renderOrders();
 }
 function confirmPay(id){
   const o=orders.find(x=>x.id===id), v=$('pr'+id).value.replace(/\s/g,'');
   if(!/^\d{10,13}$/.test(v)) return alert('Enter the 10–13 digit GCash reference number.');
   if(orders.some(x=>x.id!==id&&x.payRef===v)) return alert('That reference number was already used.');
-  o.payRef=v; o.status='Paid – Awaiting Receipt'; logAction('Pupae payment confirmed by purchaser',o.id+' GCash '+v+' P'+o.total); saveState(); renderOrders();
+  o.payRef=v; o.status='Paid – Awaiting Receipt'; save(); log('Pupae payment confirmed by purchaser',o.id+' GCash '+v+' P'+o.total); renderOrders();
 }
 function cancelOrder(id){
   const o=orders.find(x=>x.id===id); if(!o||o.status!=='Awaiting Payment'||!confirm('Cancel this order?')) return;
-  o.status='Cancelled'; const l=lots.find(x=>x.id===o.lot); if(l) l.left+=o.qty; logAction('Cancel order',o.id); saveState(); renderLots(); renderOrders();
+  o.status='Cancelled'; const l=lots.find(x=>x.id===o.lot); if(l) l.left+=o.qty; save(); log('Cancel order',o.id); renderLots(); renderOrders();
 }
 function markReceived(id){
   const o=orders.find(x=>x.id===id); if(!o) return; o.status='Received';
-  if(pupaeSalesData[o.sp]) pupaeSalesData[o.sp].push({date:today(),qty:o.qty,price:o.price}); 
-  logAction('Payment received by breeder',o.id+' P'+o.total);
-  saveState(); renderOrders();
+  if(pupaeSalesData[o.sp]) pupaeSalesData[o.sp].push({date:today(),qty:o.qty,price:o.price}); log('Payment received by breeder',o.id+' P'+o.total);
+  save(); renderOrders();
 }
 function renderOrders(){
   const box=$('orderList'); if(!box||!users[me]) return; const br=role()==='breeder';
@@ -604,66 +606,12 @@ function renderOrders(){
   }).join('')||'<p>No orders yet.</p>';
 }
 
-// ===== AUTHENTICATION =====
-function showAuth(mode){
-  $('formLogin').classList.toggle('hide',mode!=='login'); $('formReg').classList.toggle('hide',mode!=='register');
-  $('tabLi').classList.toggle('on',mode==='login'); $('tabRg').classList.toggle('on',mode==='register');
-  $('lMsg').textContent=''; $('lMsg2').textContent='';
-}
-
-async function doLogin(){
-  const u=$('liUser').value.trim().toLowerCase(), pw=$('liPass').value, m=$('lMsg');
-  if(!u||!pw){m.textContent='Enter your username and password.';return;}
-  m.textContent='Signing in…';
-  const result = await apiCall('login', {role:'',username:u,password:pw});
-  if(!result.ok){m.textContent=result.msg;return;}
-  m.textContent='';
-  try{sessionStorage.setItem('bpUser',u);}catch(e){}
-  await loadState();
-  enter(u);
-}
-
-async function doRegister(){
-  const r=$('lRole').value, u=$('rgUser').value.trim().toLowerCase(), pw=$('rgPass').value, m=$('lMsg2');
-  const x={name:$('lName').value.trim(),phone:$('lPhone').value.trim(),email:$('lEmail').value.trim(),org:$('lOrg').value.trim(),addr:$('lAddr').value.trim()};
-  if(!x.name||x.phone.length<7){m.textContent='Enter your full name and phone number.';return;}
-  if(r!=='enthusiast'&&(!x.org||!x.addr)){m.textContent='Enter your '+(r==='breeder'?'farm / breeding business name':'company / buyer name')+' and address.';return;}
-  if(u.length<3){m.textContent='Username must be at least 3 characters.';return;}
-  if(pw.length<4){m.textContent='Password must be at least 4 characters.';return;}
-  if(pw!==$('rgPass2').value){m.textContent='Passwords do not match.';return;}
-  
-  m.textContent='Creating account…';
-  const result = await apiCall('login', {role:r,username:u,password:pw,name:x.name,phone:x.phone,email:x.email,org:x.org,addr:x.addr});
-  if(!result.ok){m.textContent=result.msg;return;}
-  m.textContent='';
-  try{sessionStorage.setItem('bpUser',u);}catch(e){}
-  await loadState();
-  enter(u);
-}
-
-function enter(u){
-  me=u; $('login').classList.add('hide'); ['liPass','rgPass','rgPass2'].forEach(i=>$(i).value='');
-  $('who').textContent=u+' ('+role()+')';
-  const br=role()==='breeder'; $('adminBtn').classList.toggle('hide',!br); $('tabPupae').classList.toggle('hide',role()==='enthusiast');
-  if(!br&&document.body.classList.contains('admin-on')) toggleAdmin();
-  showView('shop');
-}
-
-function logout(){
-  logAction('Logout','');
-  try{sessionStorage.removeItem('bpUser');}catch(e){}
-  location.reload();
-}
-
 function roleChanged(){const r=$('lRole').value; $('lOrgL').textContent=r==='breeder'?'Farm / breeding business name':r==='purchaser'?'Company / buyer name':'Organization / school (optional)';}
-
-// ===== INITIALIZATION =====
-async function boot(){ 
-  await loadState();
-  render(); 
-  try{const u=sessionStorage.getItem('bpUser'); if(u&&users[u]) enter(u);}catch(e){} 
-}
-boot();
+function boot(){ render(); try{const u=sessionStorage.getItem('bpUser'); if(u&&users[u]) enter(u);}catch(e){} }
+google.script.run.withSuccessHandler(st=>{applyState(st);boot();})
+  .withFailureHandler(e=>{document.body.insertAdjacentHTML('afterbegin','<p class="note" style="padding:8px">Cannot reach the server: '+e.message+'</p>');boot();}).getState();
 </script>
 </body>
 </html>
+
+
