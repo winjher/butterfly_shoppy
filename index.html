@@ -169,46 +169,6 @@
   <div class="total">Total: ₱<span id="cartTotal">0.00</span></div>
   <button id="checkout" class="btn" onclick="checkout()">Checkout</button>
 </aside>
-
-
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwIi6BDnK7XxwwUb0QF-AeaaWHVHjOXPqwOP4xZR3GuyZ0rOaBb6Gc7uvG4H8CUKQM/exec';
-
-(function () {
-  // Already running inside Apps Script? Do nothing.
-  if (window.google && window.google.script && window.google.script.run) return;
-
-  function runner(ok, fail) {
-    return new Proxy({}, {
-      get: function (_, name) {
-        if (name === 'withSuccessHandler') return function (f) { return runner(f, fail); };
-        if (name === 'withFailureHandler') return function (f) { return runner(ok, f); };
-        if (typeof name !== 'string' || name === 'then') return undefined;
-        return function () {
-          const args = Array.prototype.slice.call(arguments);
-          fetch(APPS_SCRIPT_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },  // avoids CORS preflight
-            body: JSON.stringify({ fn: name, args: args })
-          })
-            .then(function (r) { return r.text(); })
-            .then(function (t) {
-              let j;
-              try { j = JSON.parse(t); }
-              catch (e) { throw new Error('Server did not return JSON. Check the /exec URL and that the deployment is a NEW VERSION with access "Anyone". Got: ' + t.slice(0, 120)); }
-              if (j.error) throw new Error(j.error);
-              if (!('result' in j)) throw new Error('Unexpected reply from server.');
-              if (ok) ok(j.result);
-            })
-            .catch(function (e) {
-              if (fail) fail(e); else console.error(e);
-            });
-        };
-      }
-    });
-  }
-
-  window.google = { script: { run: runner() } };
-})();
 const speciesList = {
   'Butterfly-Batwing':['#7b2d26','#e8b04a'],'Butterfly-Clippers':['#8a6d3b','#f2e3b3'],
   'Butterfly-Common Jay':['#2b2b2b','#6fd3c6'],'Butterfly-Common Lime':['#7a6a3a','#e7d85a'],
