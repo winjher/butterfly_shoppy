@@ -174,40 +174,7 @@ th,td{border:1px solid var(--line);padding:5px;text-align:left}
 
 <script>
 // Server deployment URL evaluated via Google Apps Script template engine
-const APP_URL = "https://script.google.com/macros/s/AKfycbzJ-Ga6Jo8XxMiK4FCTPwgY4r6C4C62rWdA53Uc23oufDZb7DH0b6ddLpNQjBrNu9UV/exec";
-
-/**
- * Universal API helper that tries google.script.run first, and falls back
- * to a standard fetch() POST request using APP_URL if needed.
- */
-async function apiCall(action, payload = {}) {
-  return new Promise((resolve, reject) => {
-    if (typeof google !== 'undefined' && google.script && google.script.run && google.script.run[action]) {
-      // Use native Apps Script bridge
-      let runner = google.script.run
-        .withSuccessHandler(res => resolve(res))
-        .withFailureHandler(err => resolve(null));
-      
-      // Execute based on function signature
-      if (action === 'saveState') runner.saveState(payload.state);
-      else if (action === 'getState') runner.getState();
-      else if (action === 'logActivity') runner.logActivity(payload.user, payload.role, payload.act, payload.detail);
-      else if (action === 'login') runner.login(payload.role, payload.user, payload.pass, payload.extra);
-      else runner[action]();
-    } else {
-      // Fallback HTTP POST via fetch() to APP_URL
-      fetch(APP_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action, ...payload })
-      })
-      .then(r => r.json())
-      .then(res => resolve(res))
-      .catch(err => reject(err));
-    }
-  });
-}
-
+https://script.google.com/macros/s/AKfycbzJ-Ga6Jo8XxMiK4FCTPwgY4r6C4C62rWdA53Uc23oufDZb7DH0b6ddLpNQjBrNu9UV/exec
 const speciesList = {
 'Butterfly-Batwing':['#7b2d26','#e8b04a'],'Butterfly-Clippers':['#8a6d3b','#f2e3b3'],
 'Butterfly-Common Jay':['#2b2b2b','#6fd3c6'],'Butterfly-Common Lime':['#7a6a3a','#e7d85a'],
