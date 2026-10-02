@@ -1,66 +1,139 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Butterfly Pupae Shop & Park</title>
-<script src="apps-script-bridge.js"></script>
-<script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<style>
-  :root{--bg:#f4f7f1;--fg:#223;--card:#fff;--line:#ddd;--g:#2f6b3f;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17201a;--fg:#e6eee6;--card:#222d25;--line:#3a483d;--g:#4f9a63}}
-  html{scroll-padding-top:env(safe-area-inset-top,0px)}
-  *{box-sizing:border-box}
-  body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--fg)}
-  header{background:var(--g);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
-  header h1{margin:0;font-size:1.2rem}
-  header button{background:#fff;color:#2f6b3f;border:0;border-radius:6px;padding:8px 10px;font-weight:600;cursor:pointer;margin-left:4px}
-  header button.on{outline:3px solid #ffe08a}
-  main{max-width:1100px;margin:auto;padding:16px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
-  .card,.panel{background:var(--card);border-radius:12px;box-shadow:0 1px 5px #0002;overflow:hidden}
-  .card{display:flex;flex-direction:column}
-  .panel{padding:14px;margin-bottom:16px}
-  .imgs{display:flex;background:#eaf3e4;height:130px;color:#456}
-  .imgs>div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.7rem;overflow:hidden}
-  .imgs img,.imgs svg{max-width:100%;max-height:105px}
-  .info{padding:10px;display:flex;flex-direction:column;gap:6px;flex:1}
-  .info h3{margin:0;font-size:.95rem}
-  .price{font-weight:700;color:var(--g);font-size:1.1rem}
-  .badge{display:inline-block;background:#c0392b;color:#fff;border-radius:4px;padding:2px 6px;font-size:.7rem;margin-left:4px}
-  .card.flooded{opacity:.6;filter:grayscale(.8)}
-  .row{display:flex;gap:6px;align-items:center}
-  input,select,textarea{font:inherit;padding:6px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--fg);max-width:100%}
-  .row input[type=number]{width:70px}
-  button.buy,.btn{background:var(--g);color:#fff;border:0;border-radius:6px;padding:9px 12px;cursor:pointer;font-weight:600}
-  button.buy{margin-top:auto}
-  button:disabled{background:#999!important;cursor:not-allowed}
-  .admin{display:none;border-top:1px dashed #bbb;padding-top:6px;font-size:.8rem}
-  body.admin-on .admin,body.admin-on .adminonly{display:block}
-  .adminonly{display:none}
-  .admin label{display:block;margin:3px 0}
-  .admin input[type=number]{width:100%}
-  #cart{position:fixed;top:0;right:-360px;width:340px;max-width:100%;height:100%;background:var(--card);box-shadow:-3px 0 10px #0004;padding:16px;transition:right .25s;z-index:10;overflow:auto}
-  #cart.open{right:0}
-  .ci{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:6px 0;font-size:.85rem;gap:6px}
-  .total{font-weight:700;font-size:1.1rem;margin:12px 0}
-  #checkout{width:100%}
-  section.sales{display:none}
-  body.admin-on section.sales{display:block}
-  .tw{overflow-x:auto}
-  table{border-collapse:collapse;width:100%;font-size:.85rem}
-  th,td{border:1px solid var(--line);padding:5px;text-align:left}
-  .note{font-size:.8rem;color:#c0392b}
-  .form{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
-  .form label{display:flex;flex-direction:column;font-size:.8rem;gap:3px}
-  .slots{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
-  .slot{border:2px solid var(--g);border-radius:8px;padding:8px 12px;background:none;color:var(--fg);cursor:pointer;font-size:.85rem;text-align:center}
-  .slot.sel{background:var(--g);color:#fff}
-  .slot:disabled{border-color:#999;color:#999;background:none!important;text-decoration:line-through}
-  .ok{color:var(--g);font-weight:700}
-  .hide{display:none!important}#login,#popup{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}#login{background:var(--bg)}#popup{background:#000a;z-index:40}.box{background:var(--card);border-radius:14px;padding:20px;max-width:420px;width:100%;max-height:90vh;overflow:auto}.box label{display:block;margin:8px 0;font-size:.85rem}.box input,.box select{width:100%}.atabs{display:flex;gap:8px;margin-bottom:12px}.atabs button{flex:1;padding:10px;border:2px solid var(--g);background:none;color:var(--fg);border-radius:8px;font-weight:700;cursor:pointer}.atabs button.on{background:var(--g);color:#fff}.lot{border-left:5px solid var(--g)}.lot.old{border-color:#999;opacity:.6}.pay{border:2px solid #0070e0}.pay h3{color:#0070e0}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Butterfly Pupae Shop & Park</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    /* Embedded styles previously loaded via Apps Script Stylesheet include */
+    :root {
+      --primary: #2f6b3f;
+      --primary-hover: #245330;
+      --bg: #f4f7f4;
+      --card-bg: #ffffff;
+      --text: #222222;
+      --border: #e0e0e0;
+      --accent: #e8b04a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      background: var(--primary);
+      color: white;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    header h1 { margin: 0; font-size: 1.25rem; }
+    header div { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    button {
+      background: #ffffff;
+      color: var(--primary);
+      border: 1px solid transparent;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+    button:hover { background: #eef5f0; }
+    button.on { background: var(--accent); color: #111; }
+    button.btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+    }
+    button.btn:hover { background: var(--primary-hover); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    main { padding: 20px; max-width: 1200px; margin: 0 auto; }
+    .hide { display: none !important; }
+    .panel {
+      background: var(--card-bg);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .card.flooded { opacity: 0.65; background: #fafafa; }
+    .card .imgs { display: flex; justify-content: space-around; text-align: center; font-size: 0.75rem; margin-bottom: 12px; }
+    .card .imgs img { width: 80px; height: 80px; object-fit: cover; border-radius: 4px; }
+    .badge { background: #d9534f; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 3px; margin-left: 6px; }
+    .row { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
+    .form label { display: block; margin-bottom: 10px; font-size: 0.85rem; font-weight: 600; }
+    .form input, .form select, input, select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+    }
+    .tw { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 10px; }
+    th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+    th { background: #f0f0f0; }
+    #cart {
+      position: fixed;
+      right: -350px;
+      top: 0;
+      width: 320px;
+      height: 100vh;
+      background: white;
+      box-shadow: -2px 0 8px rgba(0,0,0,0.15);
+      padding: 20px;
+      transition: right 0.3s ease;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+    }
+    #cart.open { right: 0; }
+    #cartItems { flex: 1; overflow-y: auto; margin: 15px 0; }
+    .ci { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding: 8px 0; font-size: 0.85rem; }
+    #login, #popup {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+    }
+    .box { background: white; padding: 24px; border-radius: 8px; max-width: 420px; width: 90%; max-height: 90vh; overflow-y: auto; }
+    .atabs { display: flex; gap: 8px; margin-bottom: 16px; }
+    .atabs button { flex: 1; }
+    .note { color: #d9534f; font-size: 0.85rem; }
+    .note.ok, .ok { color: #2f6b3f; }
+    .admin { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); }
+    body.admin-on .admin, body.admin-on .adminonly { display: block !important; }
+    .adminonly { display: none; }
+    .slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; margin: 12px 0; }
+    .slot { padding: 8px; text-align: center; border: 1px solid var(--border); background: #fff; cursor: pointer; }
+    .slot.sel { background: var(--primary); color: white; border-color: var(--primary); }
+  </style>
 </head>
 <body>
 <header>
@@ -101,9 +174,11 @@
   <p style="font-size:.8rem">Already registered? <a href="#" onclick="showAuth('login');return false">Log in</a></p>
  </div>
 </div></div>
+
 <div id="popup" class="hide"><div class="box"><h2 style="margin-top:0">🦋 Fresh pupae available!</h2><div id="popList"></div>
  <p style="font-size:.8rem">Fresh pupae can only be sold for 2 days. Once they mature they can no longer be sold.</p>
  <button class="btn" onclick="closePopup(true)">View &amp; Buy</button> <button class="btn" style="background:#888" onclick="closePopup(false)">Later</button></div></div>
+
 <main>
   <!-- ===== SHOP ===== -->
   <div id="viewShop">
@@ -117,6 +192,7 @@
   </div>
 
   <div id="viewPupae" class="hide"></div>
+
   <!-- ===== PARK RESERVATION ===== -->
   <div id="viewPark" class="hide">
     <div class="panel adminonly">
@@ -169,6 +245,47 @@
   <div class="total">Total: ₱<span id="cartTotal">0.00</span></div>
   <button id="checkout" class="btn" onclick="checkout()">Checkout</button>
 </aside>
+
+<script>
+// Replace this with your Google Apps Script Web App exec URL
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwIi6BDnK7XxwwUb0QF-AeaaWHVHjOXPqwOP4xZR3GuyZ0rOaBb6Gc7uvG4H8CUKQM/exec';
+
+(function () {
+  if (window.google && window.google.script && window.google.script.run) return;
+
+  function runner(ok, fail) {
+    return new Proxy({}, {
+      get: function (_, name) {
+        if (name === 'withSuccessHandler') return function (f) { return runner(f, fail); };
+        if (name === 'withFailureHandler') return function (f) { return runner(ok, f); };
+        if (typeof name !== 'string' || name === 'then') return undefined;
+        return function () {
+          const args = Array.prototype.slice.call(arguments);
+          fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ fn: name, args: args })
+          })
+            .then(function (r) { return r.text(); })
+            .then(function (t) {
+              let j;
+              try { j = JSON.parse(t); }
+              catch (e) { throw new Error('Server did not return JSON. Got: ' + t.slice(0, 120)); }
+              if (j.error) throw new Error(j.error);
+              if (!('result' in j)) throw new Error('Unexpected reply from server.');
+              if (ok) ok(j.result);
+            })
+            .catch(function (e) {
+              if (fail) fail(e); else console.error(e);
+            });
+        };
+      }
+    });
+  }
+
+  window.google = { script: { run: runner() } };
+})();
+
 const speciesList = {
   'Butterfly-Batwing':['#7b2d26','#e8b04a'],'Butterfly-Clippers':['#8a6d3b','#f2e3b3'],
   'Butterfly-Common Jay':['#2b2b2b','#6fd3c6'],'Butterfly-Common Lime':['#7a6a3a','#e7d85a'],
@@ -186,10 +303,12 @@ let park = {gName:'',gNo:'',closed:[],farms:{}};
 let reservations = [];
 let selSlot = '';
 let lots=[],orders=[],users={},me=null,polling=false;
+
 Object.keys(speciesList).forEach(s=>{
   state[s] = {price:50, flooded:false, butterflyImg:'', pupaImg:''};
   pupaeSalesData[s] = [];
 });
+
 function applyState(saved){
   if(!saved) return;
   Object.keys(state).forEach(s=>{ if(saved.state&&saved.state[s]) Object.assign(state[s],saved.state[s]); });
@@ -197,13 +316,15 @@ function applyState(saved){
   if(saved.park) Object.assign(park,saved.park);
   reservations=saved.reservations||[]; lots=saved.lots||[]; orders=saved.orders||[]; users=saved.users||{};
 }
-let saveT=0;
+
+let saveT=0, pending=0;
 function save(){
   clearTimeout(saveT);
   saveT=setTimeout(()=>{ saveT=0; pending++;
     google.script.run.withSuccessHandler(()=>pending--).withFailureHandler(()=>pending--)
       .saveState({state,sales:pupaeSalesData,park,reservations,lots,orders,users}); },300);
 }
+
 function log(action,detail){ google.script.run.logActivity(me||'-',(users[me]&&users[me].role)||'-',action,String(detail||'')); }
 
 function butterflySVG(c){
@@ -216,6 +337,7 @@ function butterflySVG(c){
   <rect x="46" y="15" width="8" height="52" rx="4" fill="#333"/>
   <path d="M48 15 Q40 2 34 4 M52 15 Q60 2 66 4" stroke="#333" stroke-width="2" fill="none"/></svg>`;
 }
+
 function pupaSVG(c){
   return `<svg viewBox="0 0 60 90" width="55" height="82">
   <path d="M30 4 C48 14 50 50 30 84 C10 50 12 14 30 4Z" fill="${c[1]}" stroke="${c[0]}" stroke-width="3" opacity=".9"/>
@@ -223,7 +345,6 @@ function pupaSVG(c){
   <line x1="30" y1="4" x2="30" y2="0" stroke="#5a4a2a" stroke-width="3"/></svg>`;
 }
 
-// ---- Views ----
 function showView(v){
   ['shop','park','pupae'].forEach(x=>{
     const N=x[0].toUpperCase()+x.slice(1);
@@ -234,7 +355,6 @@ function showView(v){
   if(v==='pupae') initPupae();
 }
 
-// ---- Shop ----
 function render(){
   const grid = document.getElementById('grid'); grid.innerHTML = '';
   Object.keys(speciesList).forEach((s,i)=>{
@@ -262,6 +382,7 @@ function render(){
   });
   renderCart();
 }
+
 function setPrice(s,v){ state[s].price = Math.max(0,parseFloat(v)||0); save(); log('Set shop price',s+' P'+state[s].price); render(); }
 function setFlooded(s,f){ state[s].flooded = f; if(f && cart[s]) delete cart[s]; save(); log('Flooded flag',s+' = '+f); render(); }
 function setImg(s,key,input){
@@ -270,12 +391,14 @@ function setImg(s,key,input){
   r.onload = ()=>{ state[s][key]=r.result; save(); render(); };
   r.readAsDataURL(file);
 }
+
 function addToCart(s,i){
   if(state[s].flooded) return;
   const q = Math.max(1,parseInt(document.getElementById('qty'+i).value,10)||1);
   cart[s] = (cart[s]||0)+q; renderCart(); toggleCart(true);
 }
 function removeFromCart(s){ delete cart[s]; renderCart(); }
+
 function renderCart(){
   Object.keys(cart).forEach(s=>{ if(state[s].flooded) delete cart[s]; });
   const box = document.getElementById('cartItems'); box.innerHTML='';
@@ -292,9 +415,11 @@ function renderCart(){
   document.getElementById('cartCount').textContent = count;
   document.getElementById('checkout').disabled = !count;
 }
+
 function toggleCart(open){
   document.getElementById('cart').classList.toggle('open', typeof open==='boolean'?open:undefined);
 }
+
 function checkout(){
   const date = new Date().toISOString().slice(0,10);
   Object.keys(cart).forEach(s=>{
@@ -304,6 +429,7 @@ function checkout(){
   log('Shop checkout',JSON.stringify(cart)); cart = {}; save(); renderCart(); updateSalesTable(); renderChart();
   alert('Thank you! Your order has been placed.'); toggleCart(false);
 }
+
 function updateSalesTable(){
   const tbody = document.getElementById('salesTable').getElementsByTagName('tbody')[0];
   tbody.innerHTML='';
@@ -312,6 +438,7 @@ function updateSalesTable(){
     [s,sale.date,sale.qty,'₱'+sale.price.toFixed(2),'₱'+(sale.qty*sale.price).toFixed(2)].forEach(t=>row.insertCell().textContent=t);
   }
 }
+
 let chart;
 function renderChart(){
   if(typeof Chart==='undefined') return;
@@ -322,6 +449,7 @@ function renderChart(){
     data:{labels:labels.map(l=>l.replace('Butterfly-','')),datasets:[{label:'Pupae sold',data,backgroundColor:'#2f6b3f'}]},
     options:{scales:{y:{beginAtZero:true,ticks:{precision:0}}}}});
 }
+
 function toggleAdmin(){
   const on = document.body.classList.toggle('admin-on');
   document.getElementById('adminHint').style.display = on?'block':'none';
@@ -330,7 +458,6 @@ function toggleAdmin(){
   renderRes();
 }
 
-// ---- Farm reservation + GCash ----
 const std=['Tropical butterflies','Educational tours','Photography sessions'];
 const FARMS={
  'JCM Butterfly Breeding Farm':{loc:'Cawit, Boac, Marinduque',ll:[16.4023,120.5960],p:150,c:20,h:'8:00 AM - 5:00 PM',tel:'+63 937 193 2565',sp:std},
@@ -356,28 +483,34 @@ function initPark(){
   if(!$('rFarm').options.length) Object.keys(FARMS).forEach(f=>$('rFarm').add(new Option(f,f)));
   const d=$('rDate'); d.min=today(); if(!d.value) d.value=today();
   $('setGName').value=park.gName; $('setGNo').value=park.gNo;
-  const u=users[me]; if(u&&u.role==='enthusiast'&&!$('rName').value){$('rName').value=u.name||'';$('rPhone').value=u.phone||'';$('rEmail').value=u.email||'';}
+  const u=users[me]; if(u&&u.role==='enthusiast'&&!$('rName').value){$('rName').value=u.name||'';$('rPhone').value=u.phone\vert{}\vert{}'';$('rEmail').value=u.email||'';}
   renderClosed(); farmChanged(); renderRes();
 }
+
 function farmChanged(){
   const f=farm(), i=FARMS[f];
   $('farmInfo').innerHTML=`📍 ${i.loc} · <a href="https://www.google.com/maps?q=${i.ll[0]},${i.ll[1]}" target="_blank" rel="noopener">map</a><br>🕐 ${i.h} · 📞 ${i.tel}<br>💰 ₱${fp(f)} per person · 👥 up to ${fc(f)} per slot<br>🎯 ${i.sp.join(', ')}`;
-  $('setPrice').value=fp(f); $('setCap').value=fc(f); $('rN').max=fc(f);
+  $('setPrice').value=fp(f); $('setCap').value=fc(f);$('rN').max=fc(f);
   renderSlots();
 }
+
 function setPark(){
   park.gName=$('setGName').value.trim(); park.gNo=$('setGNo').value.trim();
-  const f=farm(); park.farms[f]={p:Math.max(0,parseFloat($('setPrice').value)||0),c:Math.max(1,parseInt($('setCap').value,10)||1)};
+  const f=farm(); park.farms[f]={p:Math.max(0,parseFloat($('setPrice').value)\vert{}\vert{}0),c:Math.max(1,parseInt($('setCap').value,10)||1)};
   save(); farmChanged();
 }
+
 function addClosed(){
   const v=$('closeDate').value; if(!v||park.closed.includes(v)) return;
   park.closed.push(v); park.closed.sort(); save(); renderClosed(); renderSlots();
 }
+
 function openDate(v){ park.closed=park.closed.filter(x=>x!==v); save(); renderClosed(); renderSlots(); }
+
 function renderClosed(){
   $('closedList').innerHTML=park.closed.length?'Closed: '+park.closed.map(d=>`${d} <a href="#" onclick="openDate('${d}');return false">[reopen]</a>`).join(', '):'No closed dates.';
 }
+
 function renderSlots(){
   const f=farm(), date=$('rDate').value, g=nVis(), box=$('slots'), closed=park.closed.includes(date);
   box.innerHTML='';
@@ -391,6 +524,7 @@ function renderSlots(){
   if(selSlot&&(closed||fc(f)-booked(f,date,selSlot)<g)) selSlot='';
   $('rTotal').textContent=(g*fp(f)).toFixed(2);
 }
+
 function reserve(){
   const f=farm(), date=$('rDate').value, name=$('rName').value.trim(), phone=$('rPhone').value.trim(), n=nVis();
   const msg=t=>{$('rMsg').textContent=t;$('rMsg').className='note';};
@@ -404,9 +538,10 @@ function reserve(){
   const ref='BK'+Date.now().toString(36).toUpperCase().slice(-6);
   reservations.push({ref,user:me,farm:f,name,phone,email:$('rEmail').value.trim(),purpose:$('rPurpose').value,date,slot:selSlot,n,
     notes:$('rNotes').value.trim(),total:n*fp(f),status:'Pending Payment',payRef:''});
-  save(); log('Park reservation',ref+' | '+f+' | '+date+' | '+selSlot+' | '+n+' pax | P'+(n*fp(f))); selSlot=''; $('rMsg').textContent=''; $('rName').value=''; $('rNotes').value=''; $('rTerms').checked=false;
+  save(); log('Park reservation',ref+' | '+f+' | '+date+' | '+selSlot+' | '+n+' pax | P'+(n*fp(f))); selSlot=''; $('rMsg').textContent='';$('rName').value=''; $('rNotes').value='';$('rTerms').checked=false;
   $('findPhone').value=phone; renderSlots(); renderRes(); showPay(ref);
 }
+
 function showPay(ref){
   const r=reservations.find(x=>x.ref===ref); if(!r) return;
   const box=$('payBox'); box.classList.remove('hide');
@@ -419,19 +554,22 @@ function showPay(ref){
    <p id="payMsg" class="note"></p>`;
   box.scrollIntoView({behavior:'smooth'});
 }
+
 function submitPay(ref){
   const r=reservations.find(x=>x.ref===ref), v=$('payRef').value.replace(/\s/g,'');
-  if(!/^\d{10,13}$/.test(v)){ $('payMsg').textContent='Enter the 10–13 digit GCash reference number.'; return; }
+  if(!/^\d{10,13}$/.test(v)){$('payMsg').textContent='Enter the 10–13 digit GCash reference number.'; return; }
   if(reservations.some(x=>x.ref!==ref&&x.payRef===v)){ $('payMsg').textContent='That reference number was already used.'; return; }
   r.payRef=v; r.status='Payment Submitted'; save(); log('Park GCash payment submitted',ref+' GCash '+v); renderRes();
   $('payBox').innerHTML=`<h3 style="margin-top:0" class="ok">Payment submitted ✔</h3><p>Booking ${r.ref} will be confirmed once the farm verifies your GCash payment (ref ${v}).</p>`;
 }
+
 function setStatus(ref,st){
   const r=reservations.find(x=>x.ref===ref);
   if(r&&(st!=='Cancelled'||confirm('Cancel '+ref+'?'))){ r.status=st; save(); log('Park reservation '+st,ref); renderSlots(); renderRes(); }
 }
+
 function renderRes(){
-  const tb=$('resTable').getElementsByTagName('tbody')[0], admin=document.body.classList.contains('admin-on'), ph=$('findPhone').value.trim();
+  const tb=$('resTable').getElementsByTagName('tbody')[0], admin=document.body.classList.contains('admin-on');
   const list=reservations.filter(r=>r.farm&&(admin||r.user===me)).sort((a,b)=>(a.date+a.slot).localeCompare(b.date+b.slot));
   tb.innerHTML='';
   list.forEach(r=>{
@@ -445,34 +583,39 @@ function renderRes(){
   $('resHint').style.display=list.length?'none':'block';
 }
 
-// ---- Accounts, fresh pupae listings, QA, GCash orders ----
 const TWO_DAYS=2*864e5;
 const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const liveLot=l=>l.left>0&&Date.now()<l.exp;
 const role=()=>users[me]&&users[me].role;
+
 function timeLeft(l){const h=Math.floor((l.exp-Date.now())/36e5); return h<0?'Expired':Math.floor(h/24)+'d '+(h%24)+'h left';}
+
 function reload(cb){
   google.script.run.withSuccessHandler(st=>{ if(st){lots=st.lots||[];orders=st.orders||[];users=st.users||{};reservations=st.reservations||[];} if(cb)cb(); })
     .withFailureHandler(()=>{ if(cb)cb(); }).getState();
 }
+
 function showAuth(mode){
-  $('formLogin').classList.toggle('hide',mode!=='login'); $('formReg').classList.toggle('hide',mode!=='register');
-  $('tabLi').classList.toggle('on',mode==='login'); $('tabRg').classList.toggle('on',mode==='register');
-  $('lMsg').textContent=''; $('lMsg2').textContent='';
+  $('formLogin').classList.toggle('hide',mode!=='login');$('formReg').classList.toggle('hide',mode!=='register');
+  $('tabLi').classList.toggle('on',mode==='login');$('tabRg').classList.toggle('on',mode==='register');
+  $('lMsg').textContent='';$('lMsg2').textContent='';
 }
+
 function authCall(m,mode,r,u,pw,x){
   x.mode=mode; m.textContent=mode==='login'?'Signing in…':'Creating account…';
   google.script.run.withSuccessHandler(res=>{
     if(!res.ok){m.textContent=res.msg;return;}
     m.textContent=''; try{sessionStorage.setItem('bpUser',u);}catch(e){}
     reload(()=>{ if(!users[u]) users[u]=res.user; enter(u); });
-  }).withFailureHandler(e=>{m.textContent='Server error: '+e.message;}).login(r,u,pw,x);
+  }).withFailureHandler(e=>{m.textContent='Server error: '+(e.message||e);}).login(r,u,pw,x);
 }
+
 function doLogin(){
   const u=$('liUser').value.trim().toLowerCase(), pw=$('liPass').value, m=$('lMsg');
   if(!u||!pw){m.textContent='Enter your username and password.';return;}
   authCall(m,'login','',u,pw,{});
 }
+
 function doRegister(){
   const r=$('lRole').value, u=$('rgUser').value.trim().toLowerCase(), pw=$('rgPass').value, m=$('lMsg2');
   const x={name:$('lName').value.trim(),phone:$('lPhone').value.trim(),email:$('lEmail').value.trim(),org:$('lOrg').value.trim(),addr:$('lAddr').value.trim()};
@@ -483,16 +626,18 @@ function doRegister(){
   if(pw!==$('rgPass2').value){m.textContent='Passwords do not match.';return;}
   authCall(m,'register',r,u,pw,x);
 }
+
 function enter(u){
-  me=u; $('login').classList.add('hide'); ['liPass','rgPass','rgPass2'].forEach(i=>$(i).value='');
-  $('who').textContent=u+' ('+role()+')';
-  const br=role()==='breeder'; $('adminBtn').classList.toggle('hide',!br); $('tabPupae').classList.toggle('hide',role()==='enthusiast');
+  me=u; $('login').classList.add('hide'); ['liPass','rgPass','rgPass2'].forEach(i=>$(i).value='');$('who').textContent=u+' ('+role()+')';
+  const br=role()==='breeder'; $('adminBtn').classList.toggle('hide',!br);$('tabPupae').classList.toggle('hide',role()==='enthusiast');
   if(!br&&document.body.classList.contains('admin-on')) toggleAdmin();
   showView('shop'); checkPopup();
   if(!polling){polling=true; setInterval(poll,5000); window.addEventListener('storage',poll);}
 }
+
 function logout(){try{sessionStorage.removeItem('bpUser');}catch(e){} const f=()=>location.reload(); google.script.run.withSuccessHandler(f).withFailureHandler(f).logActivity(me||'-',role()||'-','Logout','');}
-let lastSig='', pending=0;
+
+let lastSig='';
 function poll(){
   if(!me||pending||saveT) return;
   reload(()=>{
@@ -502,6 +647,7 @@ function poll(){
     checkPopup();
   });
 }
+
 function checkPopup(){
   if(role()!=='purchaser'||!$('popup').classList.contains('hide')) return;
   const fresh=lots.filter(l=>liveLot(l)&&l.created>users[me].seen);
@@ -509,9 +655,11 @@ function checkPopup(){
   $('popList').innerHTML=fresh.map(l=>`<p><b>${esc(l.sp.replace('Butterfly-',''))}</b> – ${l.left} pupae · ₱${l.price.toFixed(2)} each<br><small>from ${esc(l.breeder)} · QA passed · ${timeLeft(l)}</small></p>`).join('');
   $('popup').classList.remove('hide');
 }
+
 function closePopup(go){
   $('popup').classList.add('hide'); users[me].seen=Date.now(); save(); if(go) showView('pupae');
 }
+
 function initPupae(){
   const u=users[me]; if(!u) return;
   const opts=Object.keys(speciesList).map(s=>`<option value="${s}">${s.replace('Butterfly-','')}</option>`).join('');
@@ -538,6 +686,7 @@ function initPupae(){
    <div class="panel"><h3 style="margin-top:0">My Orders</h3><div id="orderList"></div></div>`;
   renderLots(); renderOrders();
 }
+
 function postLot(){
   const u=users[me], m=t=>{$('bMsg').textContent=t;}, g=$('bGcash').value.replace(/\s/g,'');
   const qty=parseInt($('bQty').value,10), price=parseFloat($('bPrice').value);
@@ -547,14 +696,16 @@ function postLot(){
   if([...document.querySelectorAll('.qa')].some(c=>!c.checked)) return m('Complete every quality assurance check first.');
   u.gcash=g; const now=Date.now();
   lots.push({id:'L'+now.toString(36),breeder:me,sp:$('bSp').value,qty,left:qty,price,notes:$('bNotes').value.trim(),created:now,exp:now+TWO_DAYS});
-  save(); log('Post fresh pupae',lots[lots.length-1].sp+' x'+qty+' @P'+price); m(''); $('bQty').value=''; document.querySelectorAll('.qa').forEach(c=>c.checked=false); $('bNotes').value=''; renderLots();
-  $('bMsg').textContent='Posted! Purchasers will be notified. Listing expires in 2 days.'; $('bMsg').className='ok';
+  save(); log('Post fresh pupae',lots[lots.length-1].sp+' x'+qty+' @P'+price); m(''); $('bQty').value=''; document.querySelectorAll('.qa').forEach(c=>c.checked=false); $('bNotes').value=''; renderLots();$('bMsg').textContent='Posted! Purchasers will be notified. Listing expires in 2 days.'; $('bMsg').className='ok';
 }
+
 function editLeft(id){
   const l=lots.find(x=>x.id===id), n=parseInt(prompt('Exact number of pupae still available:',l.left),10);
   if(n>=0){ l.qty=(l.qty-l.left)+n; l.left=n; save(); log('Set pupae count',l.id+' '+l.sp+' now '+n); renderLots(); }
 }
+
 function withdraw(id){ const l=lots.find(x=>x.id===id); if(l&&confirm('Withdraw the remaining pupae from sale?')){l.left=0; save(); log('Withdraw listing',l.id); renderLots();} }
+
 function renderLots(){
   const box=$('lotList'); if(!box||!users[me]) return;
   if(role()==='breeder'){
@@ -571,6 +722,7 @@ function renderLots(){
       <div class="row"><input type="number" min="1" max="${l.left}" value="1" id="oq${l.id}"><button class="buy" style="margin:0" onclick="orderLot('${l.id}')">Order</button></div></div></div>`).join('')||'<p>No fresh pupae for sale right now. You will be notified when a breeder posts some.</p>';
   }
 }
+
 function orderLot(id){
   const l=lots.find(x=>x.id===id), q=parseInt($('oq'+id).value,10);
   if(!l||!liveLot(l)) return alert('This listing has expired or sold out.');
@@ -578,21 +730,25 @@ function orderLot(id){
   orders.push({id:'OR'+Date.now().toString(36).toUpperCase().slice(-6),lot:id,buyer:me,breeder:l.breeder,sp:l.sp,qty:q,price:l.price,total:q*l.price,status:'Awaiting Payment',payRef:'',created:Date.now()});
   l.left-=q; save(); log('Order pupae',l.sp+' x'+q+' from '+l.breeder); renderLots(); renderOrders();
 }
+
 function confirmPay(id){
   const o=orders.find(x=>x.id===id), v=$('pr'+id).value.replace(/\s/g,'');
   if(!/^\d{10,13}$/.test(v)) return alert('Enter the 10–13 digit GCash reference number.');
   if(orders.some(x=>x.id!==id&&x.payRef===v)) return alert('That reference number was already used.');
   o.payRef=v; o.status='Paid – Awaiting Receipt'; save(); log('Pupae payment confirmed by purchaser',o.id+' GCash '+v+' P'+o.total); renderOrders();
 }
+
 function cancelOrder(id){
   const o=orders.find(x=>x.id===id); if(!o||o.status!=='Awaiting Payment'||!confirm('Cancel this order?')) return;
   o.status='Cancelled'; const l=lots.find(x=>x.id===o.lot); if(l) l.left+=o.qty; save(); log('Cancel order',o.id); renderLots(); renderOrders();
 }
+
 function markReceived(id){
   const o=orders.find(x=>x.id===id); if(!o) return; o.status='Received';
   if(pupaeSalesData[o.sp]) pupaeSalesData[o.sp].push({date:today(),qty:o.qty,price:o.price}); log('Payment received by breeder',o.id+' P'+o.total);
   save(); renderOrders();
 }
+
 function renderOrders(){
   const box=$('orderList'); if(!box||!users[me]) return; const br=role()==='breeder';
   const list=orders.filter(o=>br?o.breeder===me:o.buyer===me).sort((a,b)=>b.created-a.created);
@@ -607,11 +763,11 @@ function renderOrders(){
 }
 
 function roleChanged(){const r=$('lRole').value; $('lOrgL').textContent=r==='breeder'?'Farm / breeding business name':r==='purchaser'?'Company / buyer name':'Organization / school (optional)';}
+
 function boot(){ render(); try{const u=sessionStorage.getItem('bpUser'); if(u&&users[u]) enter(u);}catch(e){} }
+
 google.script.run.withSuccessHandler(st=>{applyState(st);boot();})
-  .withFailureHandler(e=>{document.body.insertAdjacentHTML('afterbegin','<p class="note" style="padding:8px">Cannot reach the server: '+e.message+'</p>');boot();}).getState();
+  .withFailureHandler(e=>{document.body.insertAdjacentHTML('afterbegin','<p class="note" style="padding:8px">Cannot reach the server: '+(e.message||e)+'</p>');boot();}).getState();
 </script>
 </body>
 </html>
-
-
