@@ -169,29 +169,43 @@
 </aside>
 
 <script>
+
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwIi6BDnK7XxwwUb0QF-AeaaWHVHjOXPqwOP4xZR3GuyZ0rOaBb6Gc7uvG4H8CUKQM/exec';
 
 (function () {
-  if (window.google && google.script && google.script.run) return; // already inside Apps Script
+  // Already running inside Apps Script? Do nothing.
+  if (window.google && window.google.script && window.google.script.run) return;
+
   function runner(ok, fail) {
     return new Proxy({}, {
-      get(_, name) {
-        if (name === 'withSuccessHandler') return f => runner(f, fail);
-        if (name === 'withFailureHandler') return f => runner(ok, f);
-        if (typeof name !== 'string') return undefined;
-        return (...args) => {
+      get: function (_, name) {
+        if (name === 'withSuccessHandler') return function (f) { return runner(f, fail); };
+        if (name === 'withFailureHandler') return function (f) { return runner(ok, f); };
+        if (typeof name !== 'string' || name === 'then') return undefined;
+        return function () {
+          const args = Array.prototype.slice.call(arguments);
           fetch(APPS_SCRIPT_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // avoids CORS preflight
-            body: JSON.stringify({ fn: name, args })
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },  // avoids CORS preflight
+            body: JSON.stringify({ fn: name, args: args })
           })
-            .then(r => r.json())
-            .then(j => { if (j.error) throw new Error(j.error); if (ok) ok(j.result); })
-            .catch(e => { if (fail) fail(e); else console.error(e); });
+            .then(function (r) { return r.text(); })
+            .then(function (t) {
+              let j;
+              try { j = JSON.parse(t); }
+              catch (e) { throw new Error('Server did not return JSON. Check the /exec URL and that the deployment is a NEW VERSION with access "Anyone". Got: ' + t.slice(0, 120)); }
+              if (j.error) throw new Error(j.error);
+              if (!('result' in j)) throw new Error('Unexpected reply from server.');
+              if (ok) ok(j.result);
+            })
+            .catch(function (e) {
+              if (fail) fail(e); else console.error(e);
+            });
         };
       }
     });
   }
+
   window.google = { script: { run: runner() } };
 })();
 const speciesList = {
