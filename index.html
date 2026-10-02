@@ -2,88 +2,610 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Butterfly Pupae Shop & Park</title>
-<meta name="description" content="Buy fresh export-grade butterfly pupae from breeders and reserve butterfly farm visits in Marinduque and beyond.">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-  :root{--bg:#f4f7f1;--fg:#223;--card:#fff;--g:#2f6b3f;--line:#dbe5d6}
-  @media (prefers-color-scheme:dark){:root{--bg:#17201a;--fg:#e6eee6;--card:#222d25;--g:#4f9a63;--line:#3a483d}}
+  :root{--bg:#f4f7f1;--fg:#223;--card:#fff;--line:#ddd;--g:#2f6b3f;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17201a;--fg:#e6eee6;--card:#222d25;--line:#3a483d;--g:#4f9a63}}
+  html{scroll-padding-top:env(safe-area-inset-top,0px)}
   *{box-sizing:border-box}
-  body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--fg);line-height:1.5}
-  header{background:var(--g);color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+  body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--fg)}
+  header{background:var(--g);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
   header h1{margin:0;font-size:1.2rem}
-  .btn{display:inline-block;background:var(--g);color:#fff;border:0;border-radius:8px;padding:12px 20px;font-weight:700;font-size:1rem;cursor:pointer;text-decoration:none}
-  .btn.alt{background:none;color:var(--fg);border:2px solid var(--g)}
-  header .btn{background:#fff;color:#2f6b3f;padding:8px 14px;font-size:.9rem}
-  .hero{max-width:900px;margin:auto;padding:40px 18px 20px;text-align:center}
-  .hero h2{font-size:1.9rem;margin:0 0 10px}
-  .hero p{max-width:620px;margin:0 auto 20px}
-  .cta{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-  .cards{max-width:1000px;margin:20px auto;padding:0 18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
-  .card h3{margin:0 0 6px}
-  .card ul{margin:0;padding-left:18px;font-size:.92rem}
-  #frameWrap{display:none;max-width:1100px;margin:20px auto;padding:0 12px}
-  #frameWrap iframe{width:100%;height:85vh;border:1px solid var(--line);border-radius:12px;background:#fff}
-  .warn{max-width:700px;margin:16px auto;padding:12px 16px;border-radius:10px;background:#fff3cd;color:#664d03;display:none}
-  footer{text-align:center;font-size:.8rem;padding:24px;opacity:.75}
+  header button{background:#fff;color:#2f6b3f;border:0;border-radius:6px;padding:8px 10px;font-weight:600;cursor:pointer;margin-left:4px}
+  header button.on{outline:3px solid #ffe08a}
+  main{max-width:1100px;margin:auto;padding:16px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+  .card,.panel{background:var(--card);border-radius:12px;box-shadow:0 1px 5px #0002;overflow:hidden}
+  .card{display:flex;flex-direction:column}
+  .panel{padding:14px;margin-bottom:16px}
+  .imgs{display:flex;background:#eaf3e4;height:130px;color:#456}
+  .imgs>div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.7rem;overflow:hidden}
+  .imgs img,.imgs svg{max-width:100%;max-height:105px}
+  .info{padding:10px;display:flex;flex-direction:column;gap:6px;flex:1}
+  .info h3{margin:0;font-size:.95rem}
+  .price{font-weight:700;color:var(--g);font-size:1.1rem}
+  .badge{display:inline-block;background:#c0392b;color:#fff;border-radius:4px;padding:2px 6px;font-size:.7rem;margin-left:4px}
+  .card.flooded{opacity:.6;filter:grayscale(.8)}
+  .row{display:flex;gap:6px;align-items:center}
+  input,select,textarea{font:inherit;padding:6px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--fg);max-width:100%}
+  .row input[type=number]{width:70px}
+  button.buy,.btn{background:var(--g);color:#fff;border:0;border-radius:6px;padding:9px 12px;cursor:pointer;font-weight:600}
+  button.buy{margin-top:auto}
+  button:disabled{background:#999!important;cursor:not-allowed}
+  .admin{display:none;border-top:1px dashed #bbb;padding-top:6px;font-size:.8rem}
+  body.admin-on .admin,body.admin-on .adminonly{display:block}
+  .adminonly{display:none}
+  .admin label{display:block;margin:3px 0}
+  .admin input[type=number]{width:100%}
+  #cart{position:fixed;top:0;right:-360px;width:340px;max-width:100%;height:100%;background:var(--card);box-shadow:-3px 0 10px #0004;padding:16px;transition:right .25s;z-index:10;overflow:auto}
+  #cart.open{right:0}
+  .ci{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:6px 0;font-size:.85rem;gap:6px}
+  .total{font-weight:700;font-size:1.1rem;margin:12px 0}
+  #checkout{width:100%}
+  section.sales{display:none}
+  body.admin-on section.sales{display:block}
+  .tw{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;font-size:.85rem}
+  th,td{border:1px solid var(--line);padding:5px;text-align:left}
+  .note{font-size:.8rem;color:#c0392b}
+  .form{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+  .form label{display:flex;flex-direction:column;font-size:.8rem;gap:3px}
+  .slots{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+  .slot{border:2px solid var(--g);border-radius:8px;padding:8px 12px;background:none;color:var(--fg);cursor:pointer;font-size:.85rem;text-align:center}
+  .slot.sel{background:var(--g);color:#fff}
+  .slot:disabled{border-color:#999;color:#999;background:none!important;text-decoration:line-through}
+  .ok{color:var(--g);font-weight:700}
+  .hide{display:none!important}
+  #login,#popup{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
+  #login{background:var(--bg)}
+  #popup{background:#000a;z-index:40}
+  .box{background:var(--card);border-radius:14px;padding:20px;max-width:420px;width:100%;max-height:90vh;overflow:auto}
+  .box label{display:block;margin:8px 0;font-size:.85rem}
+  .box input,.box select{width:100%}
+  .atabs{display:flex;gap:8px;margin-bottom:12px}
+  .atabs button{flex:1;padding:10px;border:2px solid var(--g);background:none;color:var(--fg);border-radius:8px;font-weight:700;cursor:pointer}
+  .atabs button.on{background:var(--g);color:#fff}
+  .lot{border-left:5px solid var(--g)}
+  .lot.old{border-color:#999;opacity:.6}
+  .pay{border:2px solid #0070e0}
+  .pay h3{color:#0070e0}
 </style>
 </head>
 <body>
 <header>
-  <h1>🦋 Butterfly Pupae Shop &amp; Park</h1>
-  <a class="btn" id="openTop" href="#" target="_blank" rel="noopener">Open App</a>
+  <h1>🦋 Butterfly Pupae Shop & Park</h1>
+  <div>
+    <button id="tabShop" class="on" onclick="showView('shop')">Shop</button>
+    <button id="tabPupae" onclick="showView('pupae')">🐛 Fresh Pupae</button>
+    <button id="tabPark" onclick="showView('park')">🌿 Reserve Park</button>
+    <button onclick="toggleAdmin()" id="adminBtn">Manage</button>
+    <button onclick="toggleCart()">🛒 (<span id="cartCount">0</span>)</button>
+    <span id="who" style="font-size:.8rem;margin-left:6px"></span><button onclick="logout()">Log out</button>
+  </div>
 </header>
 
-<section class="hero">
-  <h2>Fresh pupae. Real farms. One place.</h2>
-  <p>Breeders list fresh, quality-checked pupae for export. Buyers are alerted and pay by GCash. Visitors can reserve a butterfly farm tour.</p>
-  <div class="cta">
-    <a class="btn" id="openMain" href="" target="_blank" rel="noopener">Log in / Register</a>
-    <button class="btn alt" onclick="showFrame()">Open on this page</button>
+<div id="login"><div class="box"><h2 style="margin-top:0">🦋 Butterfly Pupae Shop</h2>
+ <p style="font-size:.85rem;color:#666">Demo mode: Local storage only. This is a prototype interface for managing butterfly pupae sales and farm bookings.</p>
+ <div class="atabs"><button id="tabLi" class="on" onclick="showAuth('login')">Log in</button><button id="tabRg" onclick="showAuth('register')">Register</button></div>
+
+ <div id="formLogin">
+  <label>Username<input id="liUser" autocomplete="username"></label>
+  <label>Password<input id="liPass" type="password" autocomplete="current-password"></label>
+  <p class="note" id="lMsg"></p>
+  <button class="btn" style="width:100%" onclick="doLogin()">Log in</button>
+  <p style="font-size:.8rem">No account yet? <a href="#" onclick="showAuth('register');return false">Register here</a></p>
+ </div>
+
+ <div id="formReg" class="hide">
+  <label>I am registering as a<select id="lRole" onchange="roleChanged()"><option value="purchaser">Purchaser</option><option value="breeder">Breeder</option><option value="enthusiast">Enthusiast / Visitor (book farm visits)</option></select></label>
+  <label>Full name<input id="lName" autocomplete="name"></label>
+  <label>Phone number<input id="lPhone" type="tel" autocomplete="tel"></label>
+  <label>Email (optional)<input id="lEmail" type="email" autocomplete="email"></label>
+  <label><span id="lOrgL">Company / buyer name</span><input id="lOrg"></label>
+  <label>Address (barangay, town, province)<input id="lAddr" autocomplete="street-address"></label>
+  <label>Choose a username<input id="rgUser" autocomplete="username"></label>
+  <label>Choose a password<input id="rgPass" type="password" autocomplete="new-password"></label>
+  <label>Confirm password<input id="rgPass2" type="password" autocomplete="new-password"></label>
+  <p class="note" id="lMsg2"></p>
+  <button class="btn" style="width:100%" onclick="doRegister()">Create Account</button>
+  <p style="font-size:.8rem">Already registered? <a href="#" onclick="showAuth('login');return false">Log in</a></p>
+ </div>
+</div></div>
+<div id="popup" class="hide"><div class="box"><h2 style="margin-top:0">🦋 Fresh pupae available!</h2><div id="popList"></div>
+ <p style="font-size:.8rem">Fresh pupae can only be sold for 2 days. Once they mature they can no longer be sold.</p>
+ <button class="btn" onclick="closePopup(true)">View &amp; Buy</button> <button class="btn" style="background:#888" onclick="closePopup(false)">Later</button></div></div>
+<main>
+  <!-- ===== SHOP ===== -->
+  <div id="viewShop">
+    <p id="adminHint" class="note" style="display:none">Manage mode: change price, mark a species as Flooded, set photos, and edit park reservation settings.</p>
+    <div class="grid" id="grid"></div>
+    <section class="sales panel" style="margin-top:20px">
+      <h2>Sales Record</h2>
+      <div class="tw"><table id="salesTable"><thead><tr><th>Species</th><th>Date</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody></tbody></table></div>
+      <canvas id="pupaeSalesChart" height="120"></canvas>
+    </section>
   </div>
-</section>
 
-<div class="warn" id="warn">The app link is not set yet. Edit <code>index.html</code> and paste your Apps Script web app URL into <code>APP_URL</code>.</div>
+  <div id="viewPupae" class="hide"></div>
+  <!-- ===== PARK RESERVATION ===== -->
+  <div id="viewPark" class="hide">
+    <div class="panel adminonly">
+      <h3 style="margin-top:0">Park Settings (Manage mode)</h3>
+      <div class="form">
+        <label>GCash account name<input type="text" id="setGName" onchange="setPark()"></label>
+        <label>GCash number<input type="tel" id="setGNo" onchange="setPark()"></label>
+        <label>Price per person, selected farm (₱)<input type="number" min="0" id="setPrice" onchange="setPark()"></label>
+        <label>Max visitors per slot, selected farm<input type="number" min="1" id="setCap" onchange="setPark()"></label>
+        <label>Closed date (all farms)<span class="row"><input type="date" id="closeDate"><button class="btn" onclick="addClosed()">Close</button></span></label>
+      </div>
+      <p id="closedList" style="font-size:.85rem"></p>
+    </div>
 
-<section class="cards">
-  <div class="card"><h3>🐛 Breeders</h3><ul>
-    <li>Register your farm and log in</li>
-    <li>Post the exact number of fresh pupae</li>
-    <li>Pass the export quality checklist</li>
-    <li>Listings expire after 2 days</li></ul></div>
-  <div class="card"><h3>🛒 Purchasers</h3><ul>
-    <li>Get a popup when fresh pupae are posted</li>
-    <li>Order from QA-passed listings</li>
-    <li>Pay by GCash and confirm to the breeder</li></ul></div>
-  <div class="card"><h3>🌿 Enthusiasts</h3><ul>
-    <li>Register to book farm visits</li>
-    <li>Choose a farm, date and time slot</li>
-    <li>Pay the entrance fee by GCash</li></ul></div>
-</section>
+    <div class="panel">
+      <h2 style="margin-top:0">Book a Farm Visit</h2>
+      <label style="font-size:.8rem">Farm<br><select id="rFarm" onchange="selSlot='';farmChanged()"></select></label>
+      <div id="farmInfo" style="font-size:.85rem;margin:10px 0"></div>
+      <div class="form">
+        <label>Visit date<input type="date" id="rDate" onchange="renderSlots()"></label>
+        <label>Number of visitors<input type="number" min="1" value="1" id="rN" oninput="renderSlots()"></label>
+        <label>Purpose<select id="rPurpose"><option>Educational Tour</option><option>Photography</option><option>Research</option><option>School Field Trip</option><option>Family Outing</option><option>Other</option></select></label>
+      </div>
+      <div class="slots" id="slots"></div>
+      <div class="form">
+        <label>Contact name<input type="text" id="rName"></label>
+        <label>Phone number<input type="tel" id="rPhone"></label>
+        <label>Email<input type="email" id="rEmail"></label>
+        <label>Special requests<input type="text" id="rNotes"></label>
+      </div>
+      <p><label><input type="checkbox" id="rTerms"> I agree to the terms and conditions</label></p>
+      <p>Total: <b>₱<span id="rTotal">0.00</span></b> <span id="rMsg" class="note"></span></p>
+      <button class="btn" onclick="reserve()">Continue to GCash Payment</button>
+    </div>
 
-<div id="frameWrap"><iframe id="appFrame" title="Butterfly Pupae Shop app" allow="clipboard-write"></iframe></div>
+    <div class="panel pay hide" id="payBox"></div>
 
-<footer>Butterfly Pupae Shop &amp; Park · Marinduque, Philippines</footer>
+    <div class="panel">
+      <h3 style="margin-top:0">My Reservations</h3>
+      <input type="tel" id="findPhone" class="hide">
+      <div class="tw"><table id="resTable"><thead><tr><th>Ref</th><th>Farm</th><th>Name</th><th>Date</th><th>Time</th><th>Pax</th><th>Total</th><th>Status</th><th></th></tr></thead><tbody></tbody></table></div>
+      <p class="note" id="resHint">No reservations on your account yet.</p>
+    </div>
+  </div>
+</main>
+
+<aside id="cart">
+  <div class="row" style="justify-content:space-between"><h2 style="margin:0">Your Cart</h2><button onclick="toggleCart()">✕</button></div>
+  <div id="cartItems"></div>
+  <div class="total">Total: ₱<span id="cartTotal">0.00</span></div>
+  <button id="checkout" class="btn" onclick="checkout()">Checkout</button>
+</aside>
 
 <script>
-  // 1) Deploy your Apps Script as a Web app, then paste its URL (ends with /exec) here:
-  const APP_URL = 'https://script.google.com/macros/s/AKfycby9b6WnSAz7ED6yZibrQQg576ua2SikPR2dbmKUvGe1NxPBrfbOS0otQZRxYzVOXWhK/exec';
+// ===== SPECIES & STATE =====
+const speciesList = {
+  'Butterfly-Batwing':['#7b2d26','#e8b04a'],'Butterfly-Clippers':['#8a6d3b','#f2e3b3'],
+  'Butterfly-Common Jay':['#2b2b2b','#6fd3c6'],'Butterfly-Common Lime':['#7a6a3a','#e7d85a'],
+  'Butterfly-Common Mime':['#222','#fff'],'Butterfly-Common Mormon':['#222','#fff'],
+  'Butterfly-Emerald Swallowtail':['#1b3a2a','#3ddc84'],'Butterfly-Giant Silk Moth':['#8b5a2b','#e3b778'],
+  'Butterfly-Golden Birdwing':['#111','#f5c518'],'Butterfly-Great Eggfly':['#2a2a55','#fff'],
+  'Butterfly-Great Yellow Mormon':['#222','#f4e04d'],'Butterfly-Grey Glassy Tiger':['#444','#bcd4dc'],
+  'Butterfly-Paper Kite':['#111','#fff'],'Butterfly-Pink Rose':['#222','#e84a7f'],
+  'Butterfly-Plain Tiger':['#c8641e','#f1a24a'],'Butterfly-Red Lacewing':['#7a1010','#e53935'],
+  'Butterfly-Scarlet Mormon':['#111','#d62020'],'Butterfly-Tailed Jay':['#1f2a1f','#9be37f']
+};
 
-  const ok = /^https:\/\/script\.google\.com\/.+\/exec/.test(APP_URL);
-  ['openTop','openMain'].forEach(id => { const a = document.getElementById(id); a.href = ok ? APP_URL : '#'; });
-  if (!ok) document.getElementById('warn').style.display = 'block';
+let state = {}, cart = {}, pupaeSalesData = {};
+let park = {gName:'',gNo:'',closed:[],farms:{}};
+let reservations = [];
+let selSlot = '';
+let lots=[],orders=[],users={},me=null,polling=false;
 
-  function showFrame() {
-    if (!ok) { document.getElementById('warn').style.display = 'block'; return; }
-    const f = document.getElementById('appFrame');
-    if (!f.src) f.src = APP_URL;
-    const w = document.getElementById('frameWrap'); w.style.display = 'block';
-    w.scrollIntoView({ behavior: 'smooth' });
+Object.keys(speciesList).forEach(s=>{
+  state[s] = {price:50, flooded:false, butterflyImg:'', pupaImg:''};
+  pupaeSalesData[s] = [];
+});
+
+// ===== LOCAL STORAGE =====
+function loadState(){
+  try{
+    const saved = JSON.parse(localStorage.getItem('bpState')||'{}');
+    if(saved.state) Object.keys(state).forEach(s=>{ if(saved.state[s]) Object.assign(state[s],saved.state[s]); });
+    if(saved.sales) Object.keys(pupaeSalesData).forEach(s=>{ if(saved.sales[s]) pupaeSalesData[s]=saved.sales[s]; });
+    if(saved.park) Object.assign(park,saved.park);
+    reservations=saved.reservations||[]; lots=saved.lots||[]; orders=saved.orders||[]; users=saved.users||{};
+  }catch(e){}
+}
+function saveState(){
+  try{
+    localStorage.setItem('bpState',JSON.stringify({state,sales:pupaeSalesData,park,reservations,lots,orders,users}));
+  }catch(e){}
+}
+
+// ===== SVG GENERATORS =====
+function butterflySVG(c){
+  return `<svg viewBox="0 0 100 80" width="100" height="80">
+  <ellipse cx="30" cy="28" rx="26" ry="22" fill="${c[1]}" stroke="${c[0]}" stroke-width="4" transform="rotate(-20 30 28)"/>
+  <ellipse cx="70" cy="28" rx="26" ry="22" fill="${c[1]}" stroke="${c[0]}" stroke-width="4" transform="rotate(20 70 28)"/>
+  <ellipse cx="34" cy="55" rx="18" ry="15" fill="${c[1]}" stroke="${c[0]}" stroke-width="4"/>
+  <ellipse cx="66" cy="55" rx="18" ry="15" fill="${c[1]}" stroke="${c[0]}" stroke-width="4"/>
+  <circle cx="30" cy="28" r="6" fill="${c[0]}"/><circle cx="70" cy="28" r="6" fill="${c[0]}"/>
+  <rect x="46" y="15" width="8" height="52" rx="4" fill="#333"/>
+  <path d="M48 15 Q40 2 34 4 M52 15 Q60 2 66 4" stroke="#333" stroke-width="2" fill="none"/></svg>`;
+}
+function pupaSVG(c){
+  return `<svg viewBox="0 0 60 90" width="55" height="82">
+  <path d="M30 4 C48 14 50 50 30 84 C10 50 12 14 30 4Z" fill="${c[1]}" stroke="${c[0]}" stroke-width="3" opacity=".9"/>
+  <path d="M18 30 Q30 36 42 30 M16 46 Q30 54 44 46 M20 62 Q30 68 40 62" stroke="${c[0]}" stroke-width="2" fill="none"/>
+  <line x1="30" y1="4" x2="30" y2="0" stroke="#5a4a2a" stroke-width="3"/></svg>`;
+}
+
+// ===== DOM HELPERS =====
+const $=id=>document.getElementById(id);
+const today=()=>new Date().toISOString().slice(0,10);
+const live=r=>['Pending Payment','Payment Submitted','Confirmed'].includes(r.status);
+const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const liveLot=l=>l.left>0&&Date.now()<l.exp;
+const role=()=>users[me]&&users[me].role;
+const fp=n=>(park.farms[n]&&park.farms[n].p!=null)?park.farms[n].p:FARMS[n].p;
+const fc=n=>(park.farms[n]&&park.farms[n].c!=null)?park.farms[n].c:FARMS[n].c;
+const farm=()=>$('rFarm').value;
+const nVis=()=>Math.max(0,parseInt($('rN').value,10)||0);
+const booked=(f,d,s)=>reservations.filter(r=>live(r)&&r.farm===f&&r.date===d&&r.slot===s).reduce((a,r)=>a+r.n,0);
+function timeLeft(l){const h=Math.floor((l.exp-Date.now())/36e5); return h<0?'Expired':Math.floor(h/24)+'d '+(h%24)+'h left';}
+
+// ===== VIEWS =====
+function showView(v){
+  ['shop','park','pupae'].forEach(x=>{
+    const N=x[0].toUpperCase()+x.slice(1);
+    $(('view'+N)).classList.toggle('hide',v!==x);
+    $('tab'+N).classList.toggle('on',v===x);
+  });
+  if(v==='park') initPark();
+  if(v==='pupae') initPupae();
+}
+
+// ===== SHOP =====
+function render(){
+  const grid = $('grid'); grid.innerHTML = '';
+  Object.keys(speciesList).forEach((s,i)=>{
+    const d = state[s], c = speciesList[s];
+    const card = document.createElement('div');
+    card.className = 'card' + (d.flooded?' flooded':'');
+    card.innerHTML = `
+      <div class="imgs">
+        <div>${d.butterflyImg?`<img src="${d.butterflyImg}" alt="${s}">`:butterflySVG(c)}Butterfly</div>
+        <div>${d.pupaImg?`<img src="${d.pupaImg}" alt="${s} pupa">`:pupaSVG(c)}Pupa</div>
+      </div>
+      <div class="info">
+        <h3>${s.replace('Butterfly-','')}${d.flooded?'<span class="badge">FLOODED</span>':''}</h3>
+        <div class="price">₱${Number(d.price).toFixed(2)} <small style="font-weight:400">/ pupa</small></div>
+        <div class="row"><label>Qty <input type="number" min="1" value="1" id="qty${i}" ${d.flooded?'disabled':''}></label></div>
+        <button class="buy" ${d.flooded?'disabled':''} onclick="addToCart('${s}',${i})">${d.flooded?'Unavailable (Flooded)':'Add to Cart'}</button>
+        <div class="admin">
+          <label>Price (₱) <input type="number" min="0" step="0.5" value="${d.price}" onchange="setPrice('${s}',this.value)"></label>
+          <label><input type="checkbox" ${d.flooded?'checked':''} onchange="setFlooded('${s}',this.checked)"> Flooded (disable buying)</label>
+          <label>Butterfly photo <input type="file" accept="image/*" onchange="setImg('${s}','butterflyImg',this)"></label>
+          <label>Pupa photo <input type="file" accept="image/*" onchange="setImg('${s}','pupaImg',this)"></label>
+        </div>
+      </div>`;
+    grid.appendChild(card);
+  });
+  renderCart();
+}
+function setPrice(s,v){ state[s].price = Math.max(0,parseFloat(v)||0); saveState(); render(); }
+function setFlooded(s,f){ state[s].flooded = f; if(f && cart[s]) delete cart[s]; saveState(); render(); }
+function setImg(s,key,input){
+  const file = input.files[0]; if(!file) return;
+  const r = new FileReader();
+  r.onload = ()=>{ state[s][key]=r.result; saveState(); render(); };
+  r.readAsDataURL(file);
+}
+function addToCart(s,i){
+  if(state[s].flooded) return;
+  const q = Math.max(1,parseInt($('qty'+i).value,10)||1);
+  cart[s] = (cart[s]||0)+q; renderCart(); toggleCart(true);
+}
+function removeFromCart(s){ delete cart[s]; renderCart(); }
+function renderCart(){
+  Object.keys(cart).forEach(s=>{ if(state[s].flooded) delete cart[s]; });
+  const box = $('cartItems'); box.innerHTML='';
+  let total=0, count=0;
+  Object.keys(cart).forEach(s=>{
+    const line = cart[s]*state[s].price; total+=line; count+=cart[s];
+    const el = document.createElement('div'); el.className='ci';
+    el.innerHTML = `<span>${s.replace('Butterfly-','')}<br><small>${cart[s]} × ₱${state[s].price.toFixed(2)}</small></span>
+      <span>₱${line.toFixed(2)} <button onclick="removeFromCart('${s}')">✕</button></span>`;
+    box.appendChild(el);
+  });
+  if(!count) box.innerHTML='<p>Your cart is empty.</p>';
+  $('cartTotal').textContent = total.toFixed(2);
+  $('cartCount').textContent = count;
+  $('checkout').disabled = !count;
+}
+function toggleCart(open){
+  $('cart').classList.toggle('open', typeof open==='boolean'?open:undefined);
+}
+function checkout(){
+  const date = new Date().toISOString().slice(0,10);
+  Object.keys(cart).forEach(s=>{
+    if(state[s].flooded) return;
+    pupaeSalesData[s].push({date, qty:cart[s], price:state[s].price});
+  });
+  cart = {}; saveState(); renderCart(); updateSalesTable(); renderChart();
+  alert('Thank you! Your order has been placed.'); toggleCart(false);
+}
+function updateSalesTable(){
+  const tbody = $('salesTable').getElementsByTagName('tbody')[0];
+  tbody.innerHTML='';
+  for(const s in pupaeSalesData) for(const sale of pupaeSalesData[s]){
+    const row = tbody.insertRow();
+    [s,sale.date,sale.qty,'₱'+sale.price.toFixed(2),'₱'+(sale.qty*sale.price).toFixed(2)].forEach(t=>row.insertCell().textContent=t);
   }
-  if (ok && location.hash === '#app') showFrame();
+}
+let chart;
+function renderChart(){
+  if(typeof Chart==='undefined') return;
+  const labels = Object.keys(pupaeSalesData).filter(s=>pupaeSalesData[s].length);
+  const data = labels.map(s=>pupaeSalesData[s].reduce((a,x)=>a+x.qty,0));
+  if(chart) chart.destroy();
+  chart = new Chart($('pupaeSalesChart'),{type:'bar',
+    data:{labels:labels.map(l=>l.replace('Butterfly-','')),datasets:[{label:'Pupae sold',data,backgroundColor:'#2f6b3f'}]},
+    options:{scales:{y:{beginAtZero:true,ticks:{precision:0}}}}});
+}
+function toggleAdmin(){
+  const on = document.body.classList.toggle('admin-on');
+  $('adminHint').style.display = on?'block':'none';
+  $('adminBtn').textContent = on?'Exit Manage':'Manage';
+  if(on){ updateSalesTable(); renderChart(); initPark(); }
+  renderRes();
+}
+
+// ===== FARM RESERVATION =====
+const std=['Tropical butterflies','Educational tours','Photography sessions'];
+const FARMS={
+ 'JCM Butterfly Breeding Farm':{loc:'Cawit, Boac, Marinduque',ll:[16.4023,120.5960],p:150,c:20,h:'8:00 AM - 5:00 PM',tel:'+63 937 193 2565',sp:std},
+ "Lorica's Butterfly Breeding Farm":{loc:'Bunganay, Boac, Marinduque',ll:[13.391627752131035,121.83732779599431],p:150,c:20,h:'8:00 AM - 5:00 PM',tel:'+63 927 923 4527',sp:std},
+ 'Lyra-Ysabelle Butterfly':{loc:'Cawit, Boac, Marinduque',ll:[13.380662651692896,121.82747508250148],p:150,c:20,h:'8:00 AM - 5:00 PM',tel:'+63 932 023 4564',sp:std},
+ 'Marl Insects Farm':{loc:'Caganhao, Boac, Marinduque',ll:[13.402601213675057,121.82643398620317],p:150,c:20,h:'8:00 AM - 5:00 PM',tel:'+63 918 128 4360',sp:std},
+ 'Saluciana Integrated and Butterfly Farm':{loc:'Sta. Cruz, Marinduque',ll:[13.43847474827148,122.0971865954574],p:150,c:20,h:'8:00 AM - 5:00 PM',tel:'+63 915 123 4269',sp:std},
+ 'Butterfly Paradise Farm':{loc:'Baguio City',ll:[16.4023,120.5960],p:150,c:20,h:'8:00 AM - 5:00 PM',tel:'+63 917 123 4567',sp:std},
+ 'Rainbow Wings Sanctuary':{loc:'Tagaytay',ll:[14.1059,120.9627],p:120,c:15,h:'9:00 AM - 4:00 PM',tel:'+63 918 234 5678',sp:['Conservation education','Native species','Research tours']},
+ 'Monarch Breeding Center':{loc:'Los Baños, Laguna',ll:[14.1693,121.2376],p:200,c:12,h:'10:00 AM - 3:00 PM (By appointment)',tel:'+63 919 345 6789',sp:['Research tours','Breeding techniques','Student programs']}
+};
+const SLOTS=['09:00 AM - 11:00 AM','11:00 AM - 01:00 PM','01:00 PM - 03:00 PM','03:00 PM - 05:00 PM'];
+const TWO_DAYS=2*864e5;
+
+function initPark(){
+  if(!$('rFarm').options.length) Object.keys(FARMS).forEach(f=>$('rFarm').add(new Option(f,f)));
+  const d=$('rDate'); d.min=today(); if(!d.value) d.value=today();
+  $('setGName').value=park.gName; $('setGNo').value=park.gNo;
+  const u=users[me]; if(u&&u.role==='enthusiast'&&!$('rName').value){$('rName').value=u.name||'';$('rPhone').value=u.phone||'';$('rEmail').value=u.email||'';}
+  renderClosed(); farmChanged(); renderRes();
+}
+function farmChanged(){
+  const f=farm(), i=FARMS[f];
+  $('farmInfo').innerHTML=`📍 ${i.loc} · <a href="https://www.google.com/maps?q=${i.ll[0]},${i.ll[1]}" target="_blank" rel="noopener">map</a><br>🕐 ${i.h} · 📞 ${i.tel}<br>💰 ₱${fp(f)} per person · 👥 up to ${fc(f)} per slot<br>🎯 ${i.sp.join(', ')}`;
+  $('setPrice').value=fp(f); $('setCap').value=fc(f); $('rN').max=fc(f);
+  renderSlots();
+}
+function setPark(){
+  park.gName=$('setGName').value.trim(); park.gNo=$('setGNo').value.trim();
+  const f=farm(); park.farms[f]={p:Math.max(0,parseFloat($('setPrice').value)||0),c:Math.max(1,parseInt($('setCap').value,10)||1)};
+  saveState(); farmChanged();
+}
+function addClosed(){
+  const v=$('closeDate').value; if(!v||park.closed.includes(v)) return;
+  park.closed.push(v); park.closed.sort(); saveState(); renderClosed(); renderSlots();
+}
+function openDate(v){ park.closed=park.closed.filter(x=>x!==v); saveState(); renderClosed(); renderSlots(); }
+function renderClosed(){
+  $('closedList').innerHTML=park.closed.length?'Closed: '+park.closed.map(d=>`${d} <a href="#" onclick="openDate('${d}');return false">[reopen]</a>`).join(', '):'No closed dates.';
+}
+function renderSlots(){
+  const f=farm(), date=$('rDate').value, g=nVis(), box=$('slots'), closed=park.closed.includes(date);
+  box.innerHTML='';
+  if(closed){ box.innerHTML='<span class="note">Closed on this date. Please choose another.</span>'; selSlot=''; }
+  else SLOTS.forEach(s=>{
+    const left=fc(f)-booked(f,date,s), b=document.createElement('button');
+    b.className='slot'+(selSlot===s?' sel':''); b.disabled=left<=0||g>left||g<1;
+    b.innerHTML=`${s}<br><small>${Math.max(left,0)} left</small>`;
+    b.onclick=()=>{selSlot=s;renderSlots();}; box.appendChild(b);
+  });
+  if(selSlot&&(closed||fc(f)-booked(f,date,selSlot)<g)) selSlot='';
+  $('rTotal').textContent=(g*fp(f)).toFixed(2);
+}
+function reserve(){
+  const f=farm(), date=$('rDate').value, name=$('rName').value.trim(), phone=$('rPhone').value.trim(), n=nVis();
+  const msg=t=>{$('rMsg').textContent=t;$('rMsg').className='note';};
+  if(!date||date<=today()) return msg('Choose a date from tomorrow onward.');
+  if(park.closed.includes(date)) return msg('Closed on that date.');
+  if(n<1||n>fc(f)) return msg('Visitors must be 1 to '+fc(f)+'.');
+  if(!selSlot) return msg('Select an available time slot.');
+  if(!name||phone.length<7) return msg('Enter your name and a valid phone number.');
+  if(!$('rTerms').checked) return msg('Please agree to the terms.');
+  if(fc(f)-booked(f,date,selSlot)<n) return msg('Not enough space left in that slot.');
+  const ref='BK'+Date.now().toString(36).toUpperCase().slice(-6);
+  reservations.push({ref,user:me,farm:f,name,phone,email:$('rEmail').value.trim(),purpose:$('rPurpose').value,date,slot:selSlot,n,
+    notes:$('rNotes').value.trim(),total:n*fp(f),status:'Pending Payment',payRef:''});
+  saveState(); selSlot=''; $('rMsg').textContent=''; $('rName').value=''; $('rNotes').value=''; $('rTerms').checked=false;
+  $('findPhone').value=phone; renderSlots(); renderRes(); showPay(ref);
+}
+function showPay(ref){
+  const r=reservations.find(x=>x.ref===ref); if(!r) return;
+  const box=$('payBox'); box.classList.remove('hide');
+  box.innerHTML=`<h3 style="margin-top:0">💙 Pay with GCash – ${r.ref}</h3>
+   <p>${r.farm}<br>${r.date}, ${r.slot} · ${r.n} visitor(s)</p>
+   <p>Amount: <b>₱${r.total.toFixed(2)}</b></p>
+   <p>Send to: <b>${park.gNo||'(GCash number not set yet – call '+FARMS[r.farm].tel+')'}</b>${park.gName?' · '+park.gName.replace(/[<>&]/g,''):''}</p>
+   <p style="font-size:.85rem">Open GCash → Send Money → enter the amount above, then type the 13-digit GCash reference number from your receipt. Your slot is held until the farm confirms your payment.</p>
+   <div class="row"><input type="text" id="payRef" inputmode="numeric" placeholder="GCash reference no." value="${r.payRef}"><button class="btn" onclick="submitPay('${r.ref}')">I've Paid</button></div>
+   <p id="payMsg" class="note"></p>`;
+  box.scrollIntoView({behavior:'smooth'});
+}
+function submitPay(ref){
+  const r=reservations.find(x=>x.ref===ref), v=$('payRef').value.replace(/\s/g,'');
+  if(!/^\d{10,13}$/.test(v)){ $('payMsg').textContent='Enter the 10–13 digit GCash reference number.'; return; }
+  if(reservations.some(x=>x.ref!==ref&&x.payRef===v)){ $('payMsg').textContent='That reference number was already used.'; return; }
+  r.payRef=v; r.status='Payment Submitted'; saveState(); renderRes();
+  $('payBox').innerHTML=`<h3 style="margin-top:0" class="ok">Payment submitted ✔</h3><p>Booking ${r.ref} will be confirmed once the farm verifies your GCash payment (ref ${v}).</p>`;
+}
+function setStatus(ref,st){
+  const r=reservations.find(x=>x.ref===ref);
+  if(r&&(st!=='Cancelled'||confirm('Cancel '+ref+'?'))){ r.status=st; saveState(); renderSlots(); renderRes(); }
+}
+function renderRes(){
+  const tb=$('resTable').getElementsByTagName('tbody')[0], admin=document.body.classList.contains('admin-on');
+  const list=reservations.filter(r=>r.farm&&(admin||r.user===me)).sort((a,b)=>(a.date+a.slot).localeCompare(b.date+b.slot));
+  tb.innerHTML='';
+  list.forEach(r=>{
+    const row=tb.insertRow();
+    [r.ref,r.farm,r.name,r.date,r.slot,r.n,'₱'+r.total.toFixed(2),r.status+(r.payRef?' (GCash '+r.payRef+')':'')].forEach(t=>row.insertCell().textContent=t);
+    const c=row.insertCell(), add=(t,fn)=>{const b=document.createElement('button');b.textContent=t;b.onclick=fn;c.appendChild(b);};
+    if(r.status==='Pending Payment') add('Pay',()=>showPay(r.ref));
+    if(admin&&r.status==='Payment Submitted'){ add('Confirm',()=>setStatus(r.ref,'Confirmed')); add('Reject',()=>setStatus(r.ref,'Rejected')); }
+    if(live(r)) add('Cancel',()=>setStatus(r.ref,'Cancelled'));
+  });
+  $('resHint').style.display=list.length?'none':'block';
+}
+
+// ===== FRESH PUPAE LISTINGS =====
+function initPupae(){
+  const u=users[me]; if(!u) return;
+  const opts=Object.keys(speciesList).map(s=>`<option value="${s}">${s.replace('Butterfly-','')}</option>`).join('');
+  if(u.role==='breeder') $('viewPupae').innerHTML=`
+   <div class="panel"><h2 style="margin-top:0">Post Fresh Pupae</h2>
+    <div class="form">
+     <label>Your GCash number<input id="bGcash" type="tel" value="${esc(u.gcash)}"></label>
+     <label>Species<select id="bSp">${opts}</select></label>
+     <label>Exact number of pupae<input id="bQty" type="number" min="1"></label>
+     <label>Price per pupa (₱)<input id="bPrice" type="number" min="0" step="0.5" value="50"></label></div>
+    <p style="font-size:.85rem;margin-bottom:4px"><b>Quality assurance (export grade) – all required</b></p>
+    <label style="display:block;font-size:.85rem"><input type="checkbox" class="qa"> Healthy and firm, no discoloration or mold</label>
+    <label style="display:block;font-size:.85rem"><input type="checkbox" class="qa"> No deformities or damage; cremaster intact</label>
+    <label style="display:block;font-size:.85rem"><input type="checkbox" class="qa"> Correct size and weight for the species</label>
+    <label style="display:block;font-size:.85rem"><input type="checkbox" class="qa"> Not yet matured (freshly pupated, within 2 days)</label>
+    <p><input id="bNotes" placeholder="QA notes (optional)" style="width:100%"></p>
+    <p class="note" id="bMsg"></p><button class="btn" onclick="postLot()">Post Fresh Pupae (valid for 2 days)</button></div>
+   <div class="panel"><h3 style="margin-top:0">My Listings</h3><div class="tw" id="lotList"></div></div>
+   <div class="panel"><h3 style="margin-top:0">Orders from Purchasers</h3><div id="orderList"></div></div>`;
+  else $('viewPupae').innerHTML=`
+   <div class="panel"><h2 style="margin-top:0">Fresh Pupae for Sale</h2>
+    <p style="font-size:.85rem;margin-top:0">Export-grade pupae passed by the breeder's quality assurance. Listings expire after 2 days.</p>
+    <div class="grid" id="lotList"></div></div>
+   <div class="panel"><h3 style="margin-top:0">My Orders</h3><div id="orderList"></div></div>`;
+  renderLots(); renderOrders();
+}
+function postLot(){
+  const u=users[me], m=t=>{$('bMsg').textContent=t;}, g=$('bGcash').value.replace(/\s/g,'');
+  const qty=parseInt($('bQty').value,10), price=parseFloat($('bPrice').value);
+  if(!/^\+?\d{10,13}$/.test(g)) return m('Enter your GCash number so purchasers can pay you.');
+  if(!(qty>=1)) return m('Enter the exact number of pupae.');
+  if(!(price>=0)) return m('Enter a valid price.');
+  if([...document.querySelectorAll('.qa')].some(c=>!c.checked)) return m('Complete every quality assurance check first.');
+  u.gcash=g; const now=Date.now();
+  lots.push({id:'L'+now.toString(36),breeder:me,sp:$('bSp').value,qty,left:qty,price,notes:$('bNotes').value.trim(),created:now,exp:now+TWO_DAYS});
+  saveState(); m(''); $('bQty').value=''; document.querySelectorAll('.qa').forEach(c=>c.checked=false); $('bNotes').value=''; renderLots();
+  $('bMsg').textContent='Posted! Purchasers will be notified. Listing expires in 2 days.'; $('bMsg').className='ok';
+}
+function editLeft(id){
+  const l=lots.find(x=>x.id===id), n=parseInt(prompt('Exact number of pupae still available:',l.left),10);
+  if(n>=0){ l.qty=(l.qty-l.left)+n; l.left=n; saveState(); renderLots(); }
+}
+function withdraw(id){ const l=lots.find(x=>x.id===id); if(l&&confirm('Withdraw the remaining pupae from sale?')){l.left=0; saveState(); renderLots();} }
+function renderLots(){
+  const box=$('lotList'); if(!box||!users[me]) return;
+  if(role()==='breeder'){
+    const mine=lots.filter(l=>l.breeder===me).sort((a,b)=>b.created-a.created);
+    box.innerHTML='<table><thead><tr><th>Species</th><th>Left / Posted</th><th>Price</th><th>Status</th><th></th></tr></thead><tbody>'+
+     (mine.map(l=>`<tr><td>${esc(l.sp.replace('Butterfly-',''))}</td><td>${l.left} / ${l.qty}</td><td>₱${l.price.toFixed(2)}</td>
+      <td>${Date.now()>=l.exp?'Expired – matured, cannot be sold':(l.left>0?'For sale · '+timeLeft(l):'Sold out / withdrawn')}</td>
+      <td>${liveLot(l)?`<button onclick="editLeft('${l.id}')">Set count</button> <button onclick="withdraw('${l.id}')">Withdraw</button>`:''}</td></tr>`).join('')||'<tr><td colspan="5">No listings yet.</td></tr>')+'</tbody></table>';
+  } else {
+    const av=lots.filter(liveLot).sort((a,b)=>b.created-a.created);
+    box.innerHTML=av.map(l=>`<div class="card lot"><div class="info"><h3>${esc(l.sp.replace('Butterfly-',''))} <span class="badge" style="background:#2f6b3f">QA PASSED</span></h3>
+      <div class="price">₱${l.price.toFixed(2)} <small style="font-weight:400">/ pupa</small></div>
+      <small>${l.left} available · ${esc(l.breeder)}<br>⏳ ${timeLeft(l)}${l.notes?'<br>'+esc(l.notes):''}</small>
+      <div class="row"><input type="number" min="1" max="${l.left}" value="1" id="oq${l.id}"><button class="buy" style="margin:0" onclick="orderLot('${l.id}')">Order</button></div></div></div>`).join('')||'<p>No fresh pupae for sale right now. You will be notified when a breeder posts some.</p>';
+  }
+}
+function orderLot(id){
+  const l=lots.find(x=>x.id===id), q=parseInt($('oq'+id).value,10);
+  if(!l||!liveLot(l)) return alert('This listing has expired or sold out.');
+  if(!(q>=1)||q>l.left) return alert('Only '+l.left+' available.');
+  orders.push({id:'OR'+Date.now().toString(36).toUpperCase().slice(-6),lot:id,buyer:me,breeder:l.breeder,sp:l.sp,qty:q,price:l.price,total:q*l.price,status:'Awaiting Payment',payRef:'',created:Date.now()});
+  l.left-=q; saveState(); renderLots(); renderOrders();
+}
+function confirmPay(id){
+  const o=orders.find(x=>x.id===id), v=$('pr'+id).value.replace(/\s/g,'');
+  if(!/^\d{10,13}$/.test(v)) return alert('Enter the 10–13 digit GCash reference number.');
+  if(orders.some(x=>x.id!==id&&x.payRef===v)) return alert('That reference number was already used.');
+  o.payRef=v; o.status='Paid – Awaiting Receipt'; saveState(); renderOrders();
+}
+function cancelOrder(id){
+  const o=orders.find(x=>x.id===id); if(!o||o.status!=='Awaiting Payment'||!confirm('Cancel this order?')) return;
+  o.status='Cancelled'; const l=lots.find(x=>x.id===o.lot); if(l) l.left+=o.qty; saveState(); renderLots(); renderOrders();
+}
+function markReceived(id){
+  const o=orders.find(x=>x.id===id); if(!o) return; o.status='Received';
+  if(pupaeSalesData[o.sp]) pupaeSalesData[o.sp].push({date:today(),qty:o.qty,price:o.price}); 
+  saveState(); renderOrders();
+}
+function renderOrders(){
+  const box=$('orderList'); if(!box||!users[me]) return; const br=role()==='breeder';
+  const list=orders.filter(o=>br?o.breeder===me:o.buyer===me).sort((a,b)=>b.created-a.created);
+  box.innerHTML=list.map(o=>{
+    let act='';
+    if(!br&&o.status==='Awaiting Payment') act=`<p style="font-size:.85rem">💙 Send <b>₱${o.total.toFixed(2)}</b> via GCash to <b>${esc(users[o.breeder]?users[o.breeder].gcash:'')}</b>, then enter the reference number from your receipt:</p>
+      <div class="row"><input id="pr${o.id}" inputmode="numeric" placeholder="GCash reference no."><button class="btn" onclick="confirmPay('${o.id}')">Confirm Payment to Breeder</button><button onclick="cancelOrder('${o.id}')">Cancel</button></div>`;
+    if(br&&o.status==='Paid – Awaiting Receipt') act=`<button class="btn" onclick="markReceived('${o.id}')">Payment received – mark complete</button>`;
+    return `<div class="ci" style="display:block"><b>${o.id}</b> · ${esc(o.sp.replace('Butterfly-',''))} × ${o.qty} · ₱${o.total.toFixed(2)}<br>
+      <small>${br?'Buyer: '+esc(o.buyer):'Breeder: '+esc(o.breeder)} · <b>${o.status}</b>${o.payRef?' · GCash ref '+esc(o.payRef):''}</small>${act}</div>`;
+  }).join('')||'<p>No orders yet.</p>';
+}
+
+// ===== AUTHENTICATION =====
+function showAuth(mode){
+  $('formLogin').classList.toggle('hide',mode!=='login'); $('formReg').classList.toggle('hide',mode!=='register');
+  $('tabLi').classList.toggle('on',mode==='login'); $('tabRg').classList.toggle('on',mode==='register');
+  $('lMsg').textContent=''; $('lMsg2').textContent='';
+}
+function doLogin(){
+  const u=$('liUser').value.trim().toLowerCase(), pw=$('liPass').value, m=$('lMsg');
+  if(!u||!pw){m.textContent='Enter your username and password.';return;}
+  if(!users[u]||users[u].pw!==pw){m.textContent='Invalid username or password.';return;}
+  enter(u);
+}
+function doRegister(){
+  const r=$('lRole').value, u=$('rgUser').value.trim().toLowerCase(), pw=$('rgPass').value, m=$('lMsg2');
+  const x={name:$('lName').value.trim(),phone:$('lPhone').value.trim(),email:$('lEmail').value.trim(),org:$('lOrg').value.trim(),addr:$('lAddr').value.trim()};
+  if(!x.name||x.phone.length<7){m.textContent='Enter your full name and phone number.';return;}
+  if(r!=='enthusiast'&&(!x.org||!x.addr)){m.textContent='Enter your '+(r==='breeder'?'farm / business name':'company / buyer name')+' and address.';return;}
+  if(u.length<3){m.textContent='Username must be at least 3 characters.';return;}
+  if(pw.length<4){m.textContent='Password must be at least 4 characters.';return;}
+  if(pw!==$('rgPass2').value){m.textContent='Passwords do not match.';return;}
+  if(users[u]){m.textContent='That username is already taken.';return;}
+  users[u]={pw,role:r,name:x.name,phone:x.phone,email:x.email,org:x.org,addr:x.addr,gcash:'',seen:Date.now()};
+  saveState(); enter(u);
+}
+function enter(u){
+  me=u; $('login').classList.add('hide'); ['liPass','rgPass','rgPass2'].forEach(i=>$(i).value='');
+  $('who').textContent=u+' ('+role()+')';
+  const br=role()==='breeder'; $('adminBtn').classList.toggle('hide',!br); $('tabPupae').classList.toggle('hide',role()==='enthusiast');
+  if(!br&&document.body.classList.contains('admin-on')) toggleAdmin();
+  showView('shop');
+}
+function logout(){const f=()=>location.reload(); f();}
+function roleChanged(){const r=$('lRole').value; $('lOrgL').textContent=r==='breeder'?'Farm / breeding business name':r==='purchaser'?'Company / buyer name':'Organization / school (optional)';}
+
+// ===== INITIALIZATION =====
+function boot(){ 
+  loadState();
+  render(); 
+  try{const u=sessionStorage.getItem('bpUser'); if(u&&users[u]) enter(u);}catch(e){} 
+}
+boot();
 </script>
 </body>
 </html>
-
-
