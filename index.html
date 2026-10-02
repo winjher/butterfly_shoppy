@@ -169,31 +169,23 @@
 </aside>
 
 <script>
-var ENDPOINT = 'https://script.google.com/macros/s/AKfycbwIi6BDnK7XxwwUb0QF-AeaaWHVHjOXPqwOP4xZR3GuyZ0rOaBb6Gc7uvG4H8CUKQM/exec';
+const APP_URL = "https://script.google.com/macros/s/AKfycbwIi6BDnK7XxwwUb0QF-AeaaWHVHjOXPqwOP4xZR3GuyZ0rOaBb6Gc7uvG4H8CUKQM/exec";
 
-  function call(fnName, args, onSuccess, onError) {
-    function fail(err) {
-      toast(err.message || String(err), true);
-      if (onError) onError(err);
-    }
-    fetch(ENDPOINT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'rpc', fn: fnName, args: args || [] })
+async function callAppsScript(action, payload = {}) {
+  const response = await fetch(APP_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      action,
+      ...payload
     })
-      .then(function (r) { return r.json(); })
-      .then(function (res) {
-        if (!res.ok) { fail(new Error(res.message || 'Request failed.')); return; }
-        try {
-          onSuccess(res.result);
-        } catch (e) {
-          console.error(e);
-          toast('Page error: ' + e.message, true);
-        }
-      })
-      .catch(function (e) { fail(new Error('Could not reach the server. Check the ENDPOINT URL and your connection. (' + e.message + ')')); });
-  }
+  });
 
+  const data = await response.json();
+  return data;
+}
 const speciesList = {
   'Butterfly-Batwing':['#7b2d26','#e8b04a'],'Butterfly-Clippers':['#8a6d3b','#f2e3b3'],
   'Butterfly-Common Jay':['#2b2b2b','#6fd3c6'],'Butterfly-Common Lime':['#7a6a3a','#e7d85a'],
