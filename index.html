@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Butterfly Pupae Shop & Park</title>
+<script src="apps-script-bridge.js"></script>
+<script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
   :root{--bg:#f4f7f1;--fg:#223;--card:#fff;--line:#ddd;--g:#2f6b3f;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -167,8 +169,7 @@
   <div class="total">Total: ₱<span id="cartTotal">0.00</span></div>
   <button id="checkout" class="btn" onclick="checkout()">Checkout</button>
 </aside>
-<script src="apps-script-bridge.js"></script>
-<script>
+
 
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwIi6BDnK7XxwwUb0QF-AeaaWHVHjOXPqwOP4xZR3GuyZ0rOaBb6Gc7uvG4H8CUKQM/exec';
 
