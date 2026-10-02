@@ -207,20 +207,54 @@ Object.keys(speciesList).forEach(s=>{
   pupaeSalesData[s] = [];
 });
 
-// ===== LOCAL STORAGE =====
-function loadState(){
-  try{
-    const saved = JSON.parse(localStorage.getItem('bpState')||'{}');
-    if(saved.state) Object.keys(state).forEach(s=>{ if(saved.state[s]) Object.assign(state[s],saved.state[s]); });
-    if(saved.sales) Object.keys(pupaeSalesData).forEach(s=>{ if(saved.sales[s]) pupaeSalesData[s]=saved.sales[s]; });
-    if(saved.park) Object.assign(park,saved.park);
-    reservations=saved.reservations||[]; lots=saved.lots||[]; orders=saved.orders||[]; users=saved.users||{};
-  }catch(e){}
+// ===== APPSCRIPT API =====
+const APP_URL = 'https://script.google.com/macros/s/AKfycby9b6WnSAz7ED6yZibrQQg576ua2SikPR2dbmKUvGe1NxPBrfbOS0otQZRxYzVOXWhK/exec';
+let pending = 0;
+
+async function apiCall(action, data) {
+  try {
+    const response = await fetch(APP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, ...data })
+    });
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('API Error:', error);
+    return { ok: false, msg: 'Server error: ' + error.message };
+  }
 }
-function saveState(){
-  try{
-    localStorage.setItem('bpState',JSON.stringify({state,sales:pupaeSalesData,park,reservations,lots,orders,users}));
-  }catch(e){}
+
+async function loadState(){
+  pending++;
+  const result = await apiCall('getState', {});
+  if(result && result.state) {
+    Object.keys(state).forEach(s=>{ if(result.state[s]) Object.assign(state[s],result.state[s]); });
+    Object.keys(pupaeSalesData).forEach(s=>{ if(result.sales && result.sales[s]) pupaeSalesData[s]=result.sales[s]; });
+    if(result.park) Object.assign(park,result.park);
+    reservations=result.reservations||[]; lots=result.lots||[]; orders=result.orders||[]; users=result.users||{};
+  }
+  pending--;
+}
+
+async function saveState(){
+  if(pending) return; // Don't save while other operations pending
+  pending++;
+  await apiCall('saveState', {
+    state, sales: pupaeSalesData, park, reservations, lots, orders, users
+  });
+  pending--;
+}
+
+async function logAction(action, detail) {
+  if(!me) return;
+  await apiCall('logActivity', {
+    user: me,
+    role: role() || '-',
+    action,
+    detail: String(detail || '')
+  });
 }
 
 // ===== SVG GENERATORS =====
@@ -294,8 +328,8 @@ function render(){
   });
   renderCart();
 }
-function setPrice(s,v){ state[s].price = Math.max(0,parseFloat(v)||0); saveState(); render(); }
-function setFlooded(s,f){ state[s].flooded = f; if(f && cart[s]) delete cart[s]; saveState(); render(); }
+function setPrice(s,v){ state[s].price = Math.max(0,parseFloat(v)||0); logAction('Set shop price',s+' P'+state[s].price); saveState(); render(); }
+function setFlooded(s,f){ state[s].flooded = f; if(f && cart[s]) delete cart[s]; logAction('Flooded flag',s+' = '+f); saveState(); render(); }
 function setImg(s,key,input){
   const file = input.files[0]; if(!file) return;
   const r = new FileReader();
@@ -333,6 +367,7 @@ function checkout(){
     if(state[s].flooded) return;
     pupaeSalesData[s].push({date, qty:cart[s], price:state[s].price});
   });
+  logAction('Shop checkout',JSON.stringify(cart)); 
   cart = {}; saveState(); renderCart(); updateSalesTable(); renderChart();
   alert('Thank you! Your order has been placed.'); toggleCart(false);
 }
@@ -393,13 +428,14 @@ function farmChanged(){
 function setPark(){
   park.gName=$('setGName').value.trim(); park.gNo=$('setGNo').value.trim();
   const f=farm(); park.farms[f]={p:Math.max(0,parseFloat($('setPrice').value)||0),c:Math.max(1,parseInt($('setCap').value,10)||1)};
+  logAction('Park settings updated',f);
   saveState(); farmChanged();
 }
 function addClosed(){
   const v=$('closeDate').value; if(!v||park.closed.includes(v)) return;
-  park.closed.push(v); park.closed.sort(); saveState(); renderClosed(); renderSlots();
+  park.closed.push(v); park.closed.sort(); logAction('Park closed date',v); saveState(); renderClosed(); renderSlots();
 }
-function openDate(v){ park.closed=park.closed.filter(x=>x!==v); saveState(); renderClosed(); renderSlots(); }
+function openDate(v){ park.closed=park.closed.filter(x=>x!==v); logAction('Park reopened date',v); saveState(); renderClosed(); renderSlots(); }
 function renderClosed(){
   $('closedList').innerHTML=park.closed.length?'Closed: '+park.closed.map(d=>`${d} <a href="#" onclick="openDate('${d}');return false">[reopen]</a>`).join(', '):'No closed dates.';
 }
@@ -429,6 +465,7 @@ function reserve(){
   const ref='BK'+Date.now().toString(36).toUpperCase().slice(-6);
   reservations.push({ref,user:me,farm:f,name,phone,email:$('rEmail').value.trim(),purpose:$('rPurpose').value,date,slot:selSlot,n,
     notes:$('rNotes').value.trim(),total:n*fp(f),status:'Pending Payment',payRef:''});
+  logAction('Park reservation',ref+' | '+f+' | '+date+' | '+selSlot+' | '+n+' pax | P'+(n*fp(f)));
   saveState(); selSlot=''; $('rMsg').textContent=''; $('rName').value=''; $('rNotes').value=''; $('rTerms').checked=false;
   $('findPhone').value=phone; renderSlots(); renderRes(); showPay(ref);
 }
@@ -448,12 +485,12 @@ function submitPay(ref){
   const r=reservations.find(x=>x.ref===ref), v=$('payRef').value.replace(/\s/g,'');
   if(!/^\d{10,13}$/.test(v)){ $('payMsg').textContent='Enter the 10–13 digit GCash reference number.'; return; }
   if(reservations.some(x=>x.ref!==ref&&x.payRef===v)){ $('payMsg').textContent='That reference number was already used.'; return; }
-  r.payRef=v; r.status='Payment Submitted'; saveState(); renderRes();
+  r.payRef=v; r.status='Payment Submitted'; logAction('Park GCash payment submitted',ref+' GCash '+v); saveState(); renderRes();
   $('payBox').innerHTML=`<h3 style="margin-top:0" class="ok">Payment submitted ✔</h3><p>Booking ${r.ref} will be confirmed once the farm verifies your GCash payment (ref ${v}).</p>`;
 }
 function setStatus(ref,st){
   const r=reservations.find(x=>x.ref===ref);
-  if(r&&(st!=='Cancelled'||confirm('Cancel '+ref+'?'))){ r.status=st; saveState(); renderSlots(); renderRes(); }
+  if(r&&(st!=='Cancelled'||confirm('Cancel '+ref+'?'))){ r.status=st; logAction('Park reservation '+st,ref); saveState(); renderSlots(); renderRes(); }
 }
 function renderRes(){
   const tb=$('resTable').getElementsByTagName('tbody')[0], admin=document.body.classList.contains('admin-on');
@@ -506,14 +543,15 @@ function postLot(){
   if([...document.querySelectorAll('.qa')].some(c=>!c.checked)) return m('Complete every quality assurance check first.');
   u.gcash=g; const now=Date.now();
   lots.push({id:'L'+now.toString(36),breeder:me,sp:$('bSp').value,qty,left:qty,price,notes:$('bNotes').value.trim(),created:now,exp:now+TWO_DAYS});
+  logAction('Post fresh pupae',lots[lots.length-1].sp+' x'+qty+' @P'+price);
   saveState(); m(''); $('bQty').value=''; document.querySelectorAll('.qa').forEach(c=>c.checked=false); $('bNotes').value=''; renderLots();
   $('bMsg').textContent='Posted! Purchasers will be notified. Listing expires in 2 days.'; $('bMsg').className='ok';
 }
 function editLeft(id){
   const l=lots.find(x=>x.id===id), n=parseInt(prompt('Exact number of pupae still available:',l.left),10);
-  if(n>=0){ l.qty=(l.qty-l.left)+n; l.left=n; saveState(); renderLots(); }
+  if(n>=0){ l.qty=(l.qty-l.left)+n; l.left=n; logAction('Set pupae count',l.id+' '+l.sp+' now '+n); saveState(); renderLots(); }
 }
-function withdraw(id){ const l=lots.find(x=>x.id===id); if(l&&confirm('Withdraw the remaining pupae from sale?')){l.left=0; saveState(); renderLots();} }
+function withdraw(id){ const l=lots.find(x=>x.id===id); if(l&&confirm('Withdraw the remaining pupae from sale?')){l.left=0; logAction('Withdraw listing',l.id); saveState(); renderLots();} }
 function renderLots(){
   const box=$('lotList'); if(!box||!users[me]) return;
   if(role()==='breeder'){
@@ -535,21 +573,22 @@ function orderLot(id){
   if(!l||!liveLot(l)) return alert('This listing has expired or sold out.');
   if(!(q>=1)||q>l.left) return alert('Only '+l.left+' available.');
   orders.push({id:'OR'+Date.now().toString(36).toUpperCase().slice(-6),lot:id,buyer:me,breeder:l.breeder,sp:l.sp,qty:q,price:l.price,total:q*l.price,status:'Awaiting Payment',payRef:'',created:Date.now()});
-  l.left-=q; saveState(); renderLots(); renderOrders();
+  l.left-=q; logAction('Order pupae',l.sp+' x'+q+' from '+l.breeder); saveState(); renderLots(); renderOrders();
 }
 function confirmPay(id){
   const o=orders.find(x=>x.id===id), v=$('pr'+id).value.replace(/\s/g,'');
   if(!/^\d{10,13}$/.test(v)) return alert('Enter the 10–13 digit GCash reference number.');
   if(orders.some(x=>x.id!==id&&x.payRef===v)) return alert('That reference number was already used.');
-  o.payRef=v; o.status='Paid – Awaiting Receipt'; saveState(); renderOrders();
+  o.payRef=v; o.status='Paid – Awaiting Receipt'; logAction('Pupae payment confirmed by purchaser',o.id+' GCash '+v+' P'+o.total); saveState(); renderOrders();
 }
 function cancelOrder(id){
   const o=orders.find(x=>x.id===id); if(!o||o.status!=='Awaiting Payment'||!confirm('Cancel this order?')) return;
-  o.status='Cancelled'; const l=lots.find(x=>x.id===o.lot); if(l) l.left+=o.qty; saveState(); renderLots(); renderOrders();
+  o.status='Cancelled'; const l=lots.find(x=>x.id===o.lot); if(l) l.left+=o.qty; logAction('Cancel order',o.id); saveState(); renderLots(); renderOrders();
 }
 function markReceived(id){
   const o=orders.find(x=>x.id===id); if(!o) return; o.status='Received';
   if(pupaeSalesData[o.sp]) pupaeSalesData[o.sp].push({date:today(),qty:o.qty,price:o.price}); 
+  logAction('Payment received by breeder',o.id+' P'+o.total);
   saveState(); renderOrders();
 }
 function renderOrders(){
@@ -571,24 +610,37 @@ function showAuth(mode){
   $('tabLi').classList.toggle('on',mode==='login'); $('tabRg').classList.toggle('on',mode==='register');
   $('lMsg').textContent=''; $('lMsg2').textContent='';
 }
-function doLogin(){
+
+async function doLogin(){
   const u=$('liUser').value.trim().toLowerCase(), pw=$('liPass').value, m=$('lMsg');
   if(!u||!pw){m.textContent='Enter your username and password.';return;}
-  if(!users[u]||users[u].pw!==pw){m.textContent='Invalid username or password.';return;}
+  m.textContent='Signing in…';
+  const result = await apiCall('login', {role:'',username:u,password:pw});
+  if(!result.ok){m.textContent=result.msg;return;}
+  m.textContent='';
+  try{sessionStorage.setItem('bpUser',u);}catch(e){}
+  await loadState();
   enter(u);
 }
-function doRegister(){
+
+async function doRegister(){
   const r=$('lRole').value, u=$('rgUser').value.trim().toLowerCase(), pw=$('rgPass').value, m=$('lMsg2');
   const x={name:$('lName').value.trim(),phone:$('lPhone').value.trim(),email:$('lEmail').value.trim(),org:$('lOrg').value.trim(),addr:$('lAddr').value.trim()};
   if(!x.name||x.phone.length<7){m.textContent='Enter your full name and phone number.';return;}
-  if(r!=='enthusiast'&&(!x.org||!x.addr)){m.textContent='Enter your '+(r==='breeder'?'farm / business name':'company / buyer name')+' and address.';return;}
+  if(r!=='enthusiast'&&(!x.org||!x.addr)){m.textContent='Enter your '+(r==='breeder'?'farm / breeding business name':'company / buyer name')+' and address.';return;}
   if(u.length<3){m.textContent='Username must be at least 3 characters.';return;}
   if(pw.length<4){m.textContent='Password must be at least 4 characters.';return;}
   if(pw!==$('rgPass2').value){m.textContent='Passwords do not match.';return;}
-  if(users[u]){m.textContent='That username is already taken.';return;}
-  users[u]={pw,role:r,name:x.name,phone:x.phone,email:x.email,org:x.org,addr:x.addr,gcash:'',seen:Date.now()};
-  saveState(); enter(u);
+  
+  m.textContent='Creating account…';
+  const result = await apiCall('login', {role:r,username:u,password:pw,name:x.name,phone:x.phone,email:x.email,org:x.org,addr:x.addr});
+  if(!result.ok){m.textContent=result.msg;return;}
+  m.textContent='';
+  try{sessionStorage.setItem('bpUser',u);}catch(e){}
+  await loadState();
+  enter(u);
 }
+
 function enter(u){
   me=u; $('login').classList.add('hide'); ['liPass','rgPass','rgPass2'].forEach(i=>$(i).value='');
   $('who').textContent=u+' ('+role()+')';
@@ -596,12 +648,18 @@ function enter(u){
   if(!br&&document.body.classList.contains('admin-on')) toggleAdmin();
   showView('shop');
 }
-function logout(){const f=()=>location.reload(); f();}
+
+function logout(){
+  logAction('Logout','');
+  try{sessionStorage.removeItem('bpUser');}catch(e){}
+  location.reload();
+}
+
 function roleChanged(){const r=$('lRole').value; $('lOrgL').textContent=r==='breeder'?'Farm / breeding business name':r==='purchaser'?'Company / buyer name':'Organization / school (optional)';}
 
 // ===== INITIALIZATION =====
-function boot(){ 
-  loadState();
+async function boot(){ 
+  await loadState();
   render(); 
   try{const u=sessionStorage.getItem('bpUser'); if(u&&users[u]) enter(u);}catch(e){} 
 }
