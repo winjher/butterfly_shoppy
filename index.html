@@ -169,24 +169,34 @@
 </aside>
 
 <script>
-const APP_URL = "https://script.google.com/macros/s/AKfycbwIi6BDnK7XxwwUb0QF-AeaaWHVHjOXPqwOP4xZR3GuyZ0rOaBb6Gc7uvG4H8CUKQM/exec";
+<script>
+// GitHub Pages entry point: use Apps Script as the backend
+const APPS_SCRIPT_URL = 'PASTE_YOUR_WEB_APP_/exec_URL_HERE';
 
-async function callAppsScript(action, payload = {}) {
-  const response = await fetch(APP_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      action,
-      ...payload
-    })
-  });
-
-  const data = await response.json();
-  return data;
-}
-const speciesList = {
+(function () {
+  if (window.google && google.script && google.script.run) return; // already inside Apps Script
+  function runner(ok, fail) {
+    return new Proxy({}, {
+      get(_, name) {
+        if (name === 'withSuccessHandler') return f => runner(f, fail);
+        if (name === 'withFailureHandler') return f => runner(ok, f);
+        if (typeof name !== 'string') return undefined;
+        return (...args) => {
+          fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // avoids CORS preflight
+            body: JSON.stringify({ fn: name, args })
+          })
+            .then(r => r.json())
+            .then(j => { if (j.error) throw new Error(j.error); if (ok) ok(j.result); })
+            .catch(e => { if (fail) fail(e); else console.error(e); });
+        };
+      }
+    });
+  }
+  window.google = { script: { run: runner() } };
+})();
+</script>const speciesList = {
   'Butterfly-Batwing':['#7b2d26','#e8b04a'],'Butterfly-Clippers':['#8a6d3b','#f2e3b3'],
   'Butterfly-Common Jay':['#2b2b2b','#6fd3c6'],'Butterfly-Common Lime':['#7a6a3a','#e7d85a'],
   'Butterfly-Common Mime':['#222','#fff'],'Butterfly-Common Mormon':['#222','#fff'],
