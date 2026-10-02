@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Butterfly Pupae Shop & Park</title>
+<meta name="description" content="Buy fresh export-grade butterfly pupae from breeders and reserve butterfly farm visits in Marinduque and beyond.">
+<style>
+  :root{--bg:#f4f7f1;--fg:#223;--card:#fff;--g:#2f6b3f;--line:#dbe5d6}
+  @media (prefers-color-scheme:dark){:root{--bg:#17201a;--fg:#e6eee6;--card:#222d25;--g:#4f9a63;--line:#3a483d}}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--fg);line-height:1.5}
+  header{background:var(--g);color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+  header h1{margin:0;font-size:1.2rem}
+  .btn{display:inline-block;background:var(--g);color:#fff;border:0;border-radius:8px;padding:12px 20px;font-weight:700;font-size:1rem;cursor:pointer;text-decoration:none}
+  .btn.alt{background:none;color:var(--fg);border:2px solid var(--g)}
+  header .btn{background:#fff;color:#2f6b3f;padding:8px 14px;font-size:.9rem}
+  .hero{max-width:900px;margin:auto;padding:40px 18px 20px;text-align:center}
+  .hero h2{font-size:1.9rem;margin:0 0 10px}
+  .hero p{max-width:620px;margin:0 auto 20px}
+  .cta{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  .cards{max-width:1000px;margin:20px auto;padding:0 18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .card h3{margin:0 0 6px}
+  .card ul{margin:0;padding-left:18px;font-size:.92rem}
+  #frameWrap{display:none;max-width:1100px;margin:20px auto;padding:0 12px}
+  #frameWrap iframe{width:100%;height:85vh;border:1px solid var(--line);border-radius:12px;background:#fff}
+  .warn{max-width:700px;margin:16px auto;padding:12px 16px;border-radius:10px;background:#fff3cd;color:#664d03;display:none}
+  footer{text-align:center;font-size:.8rem;padding:24px;opacity:.75}
+</style>
+</head>
+<body>
+<header>
+  <h1>🦋 Butterfly Pupae Shop &amp; Park</h1>
+  <a class="btn" id="openTop" href="#" target="_blank" rel="noopener">Open App</a>
+</header>
+
+<section class="hero">
+  <h2>Fresh pupae. Real farms. One place.</h2>
+  <p>Breeders list fresh, quality-checked pupae for export. Buyers are alerted and pay by GCash. Visitors can reserve a butterfly farm tour.</p>
+  <div class="cta">
+    <a class="btn" id="openMain" href="#" target="_blank" rel="noopener">Log in / Register</a>
+    <button class="btn alt" onclick="showFrame()">Open on this page</button>
+  </div>
+</section>
+
+<div class="warn" id="warn">The app link is not set yet. Edit <code>index.html</code> and paste your Apps Script web app URL into <code>APP_URL</code>.</div>
+
+<section class="cards">
+  <div class="card"><h3>🐛 Breeders</h3><ul>
+    <li>Register your farm and log in</li>
+    <li>Post the exact number of fresh pupae</li>
+    <li>Pass the export quality checklist</li>
+    <li>Listings expire after 2 days</li></ul></div>
+  <div class="card"><h3>🛒 Purchasers</h3><ul>
+    <li>Get a popup when fresh pupae are posted</li>
+    <li>Order from QA-passed listings</li>
+    <li>Pay by GCash and confirm to the breeder</li></ul></div>
+  <div class="card"><h3>🌿 Enthusiasts</h3><ul>
+    <li>Register to book farm visits</li>
+    <li>Choose a farm, date and time slot</li>
+    <li>Pay the entrance fee by GCash</li></ul></div>
+</section>
+
+<div id="frameWrap"><iframe id="appFrame" title="Butterfly Pupae Shop app" allow="clipboard-write"></iframe></div>
+
+<footer>Butterfly Pupae Shop &amp; Park · Marinduque, Philippines</footer>
+
+<script>
+  // 1) Deploy your Apps Script as a Web app, then paste its URL (ends with /exec) here:
+  const APP_URL = 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
+
+  const ok = /^https:\/\/script\.google\.com\/.+\/exec/.test(APP_URL);
+  ['openTop','openMain'].forEach(id => { const a = document.getElementById(id); a.href = ok ? APP_URL : '#'; });
+  if (!ok) document.getElementById('warn').style.display = 'block';
+
+  function showFrame() {
+    if (!ok) { document.getElementById('warn').style.display = 'block'; return; }
+    const f = document.getElementById('appFrame');
+    if (!f.src) f.src = APP_URL;
+    const w = document.getElementById('frameWrap'); w.style.display = 'block';
+    w.scrollIntoView({ behavior: 'smooth' });
+  }
+  if (ok && location.hash === '#app') showFrame();
+</script>
+</body>
+</html>
+
+
