@@ -2,7 +2,7 @@
  * GitHub Pages entry point.
  * Makes google.script.run work outside Apps Script by calling your web app's doPost.
  */
-const APPS_SCRIPT_URL = 'PASTE_YOUR_WEB_APP_/exec_URL_HERE';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwIi6BDnK7XxwwUb0QF-AeaaWHVHjOXPqwOP4xZR3GuyZ0rOaBb6Gc7uvG4H8CUKQM/exec';
 
 (function () {
   // Already running inside Apps Script? Do nothing.
@@ -16,7 +16,10 @@ const APPS_SCRIPT_URL = 'PASTE_YOUR_WEB_APP_/exec_URL_HERE';
         if (typeof name !== 'string' || name === 'then') return undefined;
         return function () {
           const args = Array.prototype.slice.call(arguments);
+          const ctl = new AbortController();
+          const timer = setTimeout(function () { ctl.abort(); }, 40000);
           fetch(APPS_SCRIPT_URL, {
+            signal: ctl.signal,
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },  // avoids CORS preflight
             body: JSON.stringify({ fn: name, args: args })
@@ -31,6 +34,8 @@ const APPS_SCRIPT_URL = 'PASTE_YOUR_WEB_APP_/exec_URL_HERE';
               if (ok) ok(j.result);
             })
             .catch(function (e) {
+              clearTimeout(timer);
+              if (e && e.name === 'AbortError') e = new Error('Server took too long (40s). Check the /exec URL and that access is set to "Anyone".');
               if (fail) fail(e); else console.error(e);
             });
         };
