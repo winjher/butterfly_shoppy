@@ -68,7 +68,7 @@
 
 <script>
   // 1) Deploy your Apps Script as a Web app, then paste its URL (ends with /exec) here:
-  const APP_URL = 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
+  const APP_URL = 'https://script.google.com/macros/s/AKfycby9b6WnSAz7ED6yZibrQQg576ua2SikPR2dbmKUvGe1NxPBrfbOS0otQZRxYzVOXWhK/exec';
 
   const ok = /^https:\/\/script\.google\.com\/.+\/exec/.test(APP_URL);
   ['openTop','openMain'].forEach(id => { const a = document.getElementById(id); a.href = ok ? APP_URL : '#'; });
